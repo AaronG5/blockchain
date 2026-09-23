@@ -24,11 +24,14 @@ struct Pixel {
 inline vector<Pixel> loadRawImagePixels(int* imageWidth, int* imageHeight);
 
 
-inline string hashFunction(string input) {
+inline string hashFunction(const string& input) {
    int imageWidth, imageHeight;
 
+   // Step 1
    const vector<Pixel> pixels = loadRawImagePixels(&imageWidth, &imageHeight);
 
+   // Step 2
+   const vector<int> inputContent(input.begin(), input.end());
 }
 
 inline vector<Pixel> loadRawImagePixels(int* imageWidth, int* imageHeight) {
