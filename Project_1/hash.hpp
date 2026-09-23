@@ -32,6 +32,12 @@ inline string hashFunction(const string& input) {
 
    // Step 2
    const vector<int> inputContent(input.begin(), input.end());
+
+   // Step 3
+   int inputSum = 0;
+   for(int val : inputContent) {
+      inputSum += val;
+   }
 }
 
 inline vector<Pixel> loadRawImagePixels(int* imageWidth, int* imageHeight) {
