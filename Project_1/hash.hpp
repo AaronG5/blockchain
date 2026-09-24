@@ -33,7 +33,7 @@ inline string hashFunction(const string& input) {
    const vector<Pixel> pixels = loadRawImagePixels(&imageWidth, &imageHeight);
 
    // Step 2
-   const vector<int> inputContent(input.begin(), input.end());
+   vector<int> inputContent(input.begin(), input.end());
    const int contentSize = inputContent.size();
 
    // Step 3
