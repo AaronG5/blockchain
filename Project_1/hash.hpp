@@ -2,9 +2,8 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <iomanip>
-#include <iostream>
-#include <fstream>
 #include <sstream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -26,6 +25,7 @@ inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>
 
 // Main hashing function
 inline string hashFunction(const string& input) {
+   const int HASH_SIZE = 64;
    int imageWidth, imageHeight;
    string hash = "";
 
@@ -42,13 +42,31 @@ inline string hashFunction(const string& input) {
       inputSum += val;
    }
 
-   // Step 4
-   for(int i = 0; i < contentSize; i += 4) {
-      auto idx = getPixelIndex(i, contentSize, inputContent, inputSum, imageWidth, imageHeight);
-      Pixel tempPixel = pixels[idx];
+   // Loop used for step 7
+   for(int i = 0;; ++i) {
+      int shift = i % contentSize;
+      rotate(inputContent.begin(), inputContent.end() - shift, inputContent.end());
 
-      // Steps 5 and 6
-      hash += decToHexStr((tempPixel.r ^ tempPixel.g ^ tempPixel.b));
+      // Step 4
+      for(int j = 0; j < contentSize; j += 4) {
+         auto idx = getPixelIndex(j, contentSize, inputContent, inputSum, imageWidth, imageHeight);
+         Pixel tempPixel = pixels[idx];
+   
+         // Steps 5 and 6
+         hash += decToHexStr((tempPixel.r ^ tempPixel.g ^ tempPixel.b));
+         if(hash.size() >= HASH_SIZE) {
+            break;
+         }
+      }
+
+      // Steps 8 and 9
+      if(hash.size() > HASH_SIZE) {
+         hash.resize(HASH_SIZE);
+         return hash;
+      }
+      if(hash.size() == HASH_SIZE) {
+         return hash;
+      }
    }
 }
 
