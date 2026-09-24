@@ -21,6 +21,8 @@ struct Pixel {
 // Helper functions
 inline vector<Pixel> loadRawImagePixels(int* imageWidth, int* imageHeight);
 inline string decToHexStr(const int& decimal);
+inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>& inputContent, 
+                         const int& inputSum, const int& imageWidth, const int& imageHeight);
 
 // Main hashing function
 inline string hashFunction(const string& input) {
@@ -42,22 +44,8 @@ inline string hashFunction(const string& input) {
 
    // Step 4
    for(int i = 0; i < contentSize; i += 4) {
-      int x1 = inputContent[i];
-      int x2 = (i + 1 < contentSize) ? inputContent[i + 1] : 0;
-      int y1 = (i + 2 < contentSize) ? inputContent[i + 2] : 0;
-      int y2 = (i + 3 < contentSize) ? inputContent[i + 3] : 0;
-
-      int x = x1 * x2 + inputSum;
-      int y = y1 * y2 + inputSum;
-
-      while(x > imageWidth) { // Might break on coordinate edge?
-         x = (x % imageWidth) + (x / imageWidth);
-      }
-      while(y > imageHeight) {
-         y = (y % imageHeight) + (y / imageHeight);
-      }
-
-      Pixel tempPixel = pixels[y * imageWidth + x];
+      auto idx = getPixelIndex(i, contentSize, inputContent, inputSum, imageWidth, imageHeight);
+      Pixel tempPixel = pixels[idx];
 
       // Steps 5 and 6
       hash += decToHexStr((tempPixel.r ^ tempPixel.g ^ tempPixel.b));
@@ -93,4 +81,24 @@ inline string decToHexStr(const int& decimal) {
    stringstream ss;
    ss << hex << setw(2) << setfill('0') << decimal;
    return ss.str();
+}
+
+inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>& inputContent, 
+                         const int& inputSum, const int& imageWidth, const int& imageHeight) {
+   int x1 = inputContent[i];
+   int x2 = (i + 1 < contentSize) ? inputContent[i + 1] : 0;
+   int y1 = (i + 2 < contentSize) ? inputContent[i + 2] : 0;
+   int y2 = (i + 3 < contentSize) ? inputContent[i + 3] : 0;
+
+   int x = x1 * x2 + inputSum;
+   int y = y1 * y2 + inputSum;
+
+   while(x > imageWidth) { // Might break on coordinate edge?
+      x = (x % imageWidth) + (x / imageWidth);
+   }
+   while(y > imageHeight) {
+      y = (y % imageHeight) + (y / imageHeight);
+   }
+
+   return y * imageWidth + x;
 }
