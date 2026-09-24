@@ -111,7 +111,7 @@ inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>
    int x = x1 * x2 + inputSum;
    int y = y1 * y2 + inputSum;
 
-   while(x > imageWidth) { // Might break on coordinate edge?
+   while(x > imageWidth) {
       x = (x % imageWidth) + (x / imageWidth);
    }
    while(y > imageHeight) {
