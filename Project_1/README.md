@@ -10,7 +10,7 @@ A PNG image file must be present in the same directory as the executable file. T
 
 ### Input
 
-Text or filename (must have the `.txt` extension). Input is expected to only include ASCII symbols.
+Text or filename (must have the `.txt` extension). Input is expected to only include ASCII symbols. Text inputted by hand is stripped of the newline character.
 
 ### Input limitations
 
@@ -27,3 +27,14 @@ Input should not be larger than 128 characters long.
 7. If the hash hasn't reached 64 symbol size, the pixel lookup is run again, but the `int` array is offset by the cycle iteration count.
 8. If the hash is longer than 64 hex symbols, it is compressed to the appropriate size (64 symbols).
 9. The hash is returned
+
+# Running the Hashing function (MacOS or Linux)
+
+From the `Project_1` directory:
+
+```
+make build
+./hasher
+```
+
+# Eksperimentinis Tyrimas: teisingumas ir sparta
