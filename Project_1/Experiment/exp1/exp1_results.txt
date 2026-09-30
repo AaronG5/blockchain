@@ -1,0 +1,28 @@
+Executable: /Users/aarongandzumian/Code/Uni/5sem/Blockchain/Project_1/hasher
+Required hash length: 64 hex digits (256 bits)
+
+File                           Bytes  Length  Text==File  Result
+----------------------------------------------------------------
+empty.txt                          0  n/a     n/a         REJECTED (input is empty.)
+newline_with_n.txt                12  OK      n/a         PASS
+newline_with_rn.txt               13  OK      n/a         PASS
+newline_without.txt               11  OK      yes         PASS
+one_a.txt                          1  OK      yes         PASS
+one_b.txt                          1  OK      yes         PASS
+order_chars_shuffle.txt           43  OK      yes         PASS
+order_original.txt                43  OK      yes         PASS
+random_1001.txt                 1001  OK      yes         PASS
+random_1001_change_end.txt      1001  OK      yes         PASS
+random_1456.txt                 1456  OK      yes         PASS
+random_1456_change_mid.txt      1456  OK      yes         PASS
+random_2003.txt                 2003  OK      yes         PASS
+random_2003_change_start.txt    2003  OK      yes         PASS
+repeat_a_100.txt                 100  OK      yes         PASS
+repeat_abc_127.txt               127  OK      yes         PASS
+utf8_lt.txt                       64  OK      yes         PASS
+whitespace_both.txt               17  OK      yes         PASS
+whitespace_leading.txt            14  OK      yes         PASS
+whitespace_none.txt               11  OK      yes         PASS
+whitespace_trailing.txt           14  OK      yes         PASS
+
+Files: 21 | PASS: 20 | FAIL: 0 | REJECTED: 1
