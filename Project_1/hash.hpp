@@ -33,8 +33,13 @@ inline string hashFunction(const string& input) {
    const vector<Pixel> pixels = loadRawImagePixels(&imageWidth, &imageHeight);
 
    // Step 2
-   vector<int> inputContent(input.begin(), input.end());
+   vector<int> inputContent;
+   for(unsigned char c : input) inputContent.push_back(c);
    const int contentSize = inputContent.size();
+   
+   if(contentSize <= 0) {
+      throw runtime_error("Empty input");
+   }
 
    // Step 3
    int inputSum = 0; // Used to offset X and Y starting point
