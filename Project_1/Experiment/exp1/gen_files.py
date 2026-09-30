@@ -3,9 +3,9 @@
 Experiment 1: input file generator.
 
 Usage:
-    python generate_inputs.py [--seed 12345]
+    python gen_files.py [--seed 12345]
 
-Files are written to "<script directory>/exp1/".
+Files are written to "<script directory>/gen/".
 """
 
 import argparse
