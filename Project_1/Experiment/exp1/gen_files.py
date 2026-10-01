@@ -139,7 +139,7 @@ def main():
             "machine": platform.machine(),
             "processor": platform.processor(),
             "compiler": platform.python_compiler(),
-            "build_options": "N/A (interpreted language)",
+            "build_options": "-std=c++17 -O3",
         },
         "reproduce_command": f"python {Path(__file__).name} --seed {args.seed}",
         "files": entries,
