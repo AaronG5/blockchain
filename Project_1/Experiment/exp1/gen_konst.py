@@ -2,13 +2,13 @@ import os
 
 from pathlib import Path
 
-SIZE = 790
+SIZE = 789
 
 def main():
    i = 1
 
    input_file = str(Path(__file__).resolve().parent / "konstitucija.txt")
-   output_dir = Path(__file__).resolve().parent / "konst_out/"
+   output_dir = Path(__file__).resolve().parent / "gen_konst/"
 
    output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -16,7 +16,10 @@ def main():
       lines = file.readlines()
 
    while i < SIZE*2:
-      output_file = str(output_dir / f"konst_{i}.txt")
+      if i > SIZE:
+         output_file = str(output_dir / f"konst_{SIZE}.txt")
+      else:
+         output_file = str(output_dir / f"konst_{i}.txt")
 
       with open(output_file, "w", encoding="utf-8") as file:
          file.writelines(lines[:i])
