@@ -5,9 +5,10 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
+#define STBI_ONLY_PNG
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#define STBI_ONLY_PNG
 
 using namespace std;
 
@@ -17,8 +18,14 @@ struct Pixel {
    unsigned char b; 
 };
 
+struct ImageData {
+   vector<Pixel> pixels;
+   int imageWidth = 0;
+   int imageHeight = 0;
+};
+
 // Helper functions
-inline vector<Pixel> loadRawImagePixels(int* imageWidth, int* imageHeight);
+inline ImageData loadRawImage();
 inline string decToHexStr(const int& decimal);
 inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>& inputContent, 
                          const int& inputSum, const int& imageWidth, const int& imageHeight);
@@ -26,11 +33,10 @@ inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>
 // Main hashing function
 inline string hashFunction(const string& input) {
    const int HASH_SIZE = 64;
-   int imageWidth, imageHeight;
    string hash = "";
 
    // Step 1
-   const vector<Pixel> pixels = loadRawImagePixels(&imageWidth, &imageHeight);
+   static ImageData cachedImage = loadRawImage();
 
    // Step 2
    vector<int> inputContent;
@@ -54,8 +60,8 @@ inline string hashFunction(const string& input) {
 
       // Step 4
       for(int j = 0; j < contentSize; j += 4) {
-         auto idx = getPixelIndex(j, contentSize, inputContent, inputSum, imageWidth, imageHeight);
-         Pixel tempPixel = pixels[idx];
+         auto idx = getPixelIndex(j, contentSize, inputContent, inputSum, cachedImage.imageWidth, cachedImage.imageHeight);
+         Pixel tempPixel = cachedImage.pixels[idx];
    
          // Steps 5 and 6
          hash += decToHexStr((tempPixel.r ^ tempPixel.g ^ tempPixel.b));
@@ -75,21 +81,27 @@ inline string hashFunction(const string& input) {
    }
 }
 
-inline vector<Pixel> loadRawImagePixels(int* imageWidth, int* imageHeight) {
+inline ImageData loadRawImage() {
    const char* FILENAME = "image.png";
-   int channels;
-   unsigned char* pixelData = stbi_load(FILENAME, imageWidth, imageHeight, &channels, 3);
+   const int CHANNELS = 3;
+   int chnl, imageWidth, imageHeight;
+
+   unsigned char* pixelData = stbi_load(FILENAME, &imageWidth, &imageHeight, &chnl, CHANNELS);
 
    if(!pixelData) {
       throw runtime_error("Failed to load image");
    }
 
-   vector<Pixel> pixels((*imageWidth) * (*imageHeight));
+   ImageData imageData;
+   imageData.imageWidth = imageWidth;
+   imageData.imageHeight = imageHeight;
+   imageData.pixels.resize(imageWidth * imageHeight);
    
-   for(int y = 0; y < (*imageHeight); ++y) {
-      for(int x = 0; x < (*imageWidth); ++x) {
-         int index = (y * (*imageWidth) + x) * channels;
-         pixels[y * (*imageWidth) + x] = {
+   for(int y = 0; y < imageHeight; ++y) {
+      for(int x = 0; x < imageWidth; ++x) {
+         int index = (y * imageWidth + x) * CHANNELS;
+         
+         imageData.pixels[y * imageWidth + x] = {
             pixelData[index],     // R
             pixelData[index + 1], // G
             pixelData[index + 2], // B
@@ -97,7 +109,7 @@ inline vector<Pixel> loadRawImagePixels(int* imageWidth, int* imageHeight) {
       }
    }
    stbi_image_free(pixelData);
-   return pixels;
+   return imageData;
 }
 
 inline string decToHexStr(const int& decimal) {
