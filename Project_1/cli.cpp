@@ -14,7 +14,6 @@ string modeName(Mode mode) {
    return (mode == Mode::TEXT) ? "Text" : "File";
 }
 
-// Reads an entire text file into a single string, stripping trailing newline characters.
 bool readFileContent(const string& filename, string& outContent) {
    ifstream file(filename, ios::binary);
    if(!file.is_open()) {
@@ -86,11 +85,11 @@ int main(const int argc, const char* argv[]) {
             continue;
          }
 
-         if(static_cast<int>(input.size()) > MAX_INPUT_LENGTH) {
-            cout << "Error: input exceeds " << MAX_INPUT_LENGTH << " character limit "
-                 << "(got " << input.size() << ")." << endl;
-            continue;
-         }
+         // if(static_cast<int>(input.size()) > MAX_INPUT_LENGTH) {
+         //    cout << "Error: input exceeds " << MAX_INPUT_LENGTH << " character limit "
+         //         << "(got " << input.size() << ")." << endl;
+         //    continue;
+         // }
 
          try {
             string hash = hashFunction(input);
