@@ -1,17 +1,28 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -O2
-TARGET = hasher
-SOURCES = main.cpp
+CXXFLAGS = -std=c++17 -O3
+CLI_TARGET = cli_hasher
+CLI_SOURCE = cli.cpp
+EXP1_DIR = Experiment/exp1
+BENCH_KONST_TARGET = $(EXP1_DIR)/bench_konst
+BENCH_KONST_SOURCE = $(EXP1_DIR)/bench_konst.cpp
+TARGETS = $(CLI_TARGET) $(BENCH_KONST_TARGET)
 HEADERS = hash.hpp stb_image.h
 
 .PHONY: build rebuild clean
 
-build: $(TARGET)
+build: build_cli build_bench_konst
 
-$(TARGET): $(SOURCES) $(HEADERS)
-	$(CXX) $(CXXFLAGS) $(SOURCES) -o $(TARGET)
+build_cli: $(CLI_TARGET)
+
+$(CLI_TARGET): $(CLI_SOURCE) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(CLI_SOURCE) -o $(CLI_TARGET)
+
+build_bench_konst: $(BENCH_KONST_TARGET) 
+
+$(BENCH_KONST_TARGET): $(BENCH_KONST_SOURCE) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(BENCH_KONST_SOURCE) -o $(BENCH_KONST_TARGET)
 
 rebuild: clean build
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGETS)
