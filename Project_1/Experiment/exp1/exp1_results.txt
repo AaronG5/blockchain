@@ -1,4 +1,4 @@
-Executable: /Users/aarongandzumian/Code/Uni/5sem/Blockchain/Project_1/hasher
+Executable: /Users/aarongandzumian/Code/Uni/5sem/Blockchain/Project_1/cli_hasher
 Required hash length: 64 hex digits (256 bits)
 
 File                           Bytes  Length  Text==File  Result
