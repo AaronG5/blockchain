@@ -8,12 +8,14 @@ BENCH_KONST_SOURCE = $(EXP1_DIR)/bench_konst.cpp
 EXP2_DIR = Experiment/exp2
 COLLISION_TARGET = $(EXP2_DIR)/collision_test
 COLLISION_SOURCE = $(EXP2_DIR)/collision_test.cpp
-TARGETS = $(CLI_TARGET) $(BENCH_KONST_TARGET) $(COLLISION_TARGET)
+AVALANCHE_TARGET = $(EXP2_DIR)/avalanche_test
+AVALANCHE_SOURCE = $(EXP2_DIR)/avalanche_test.cpp
+TARGETS = $(CLI_TARGET) $(BENCH_KONST_TARGET) $(COLLISION_TARGET) $(AVALANCHE_TARGET)
 HEADERS = hash.hpp stb_image.h
 
 .PHONY: build rebuild clean
 
-build: build_cli build_bench_konst build_collision_test
+build: build_cli build_bench_konst build_collision_test build_avalanche_test
 
 build_cli: $(CLI_TARGET)
 
@@ -29,6 +31,11 @@ build_collision_test: $(COLLISION_TARGET)
 
 $(COLLISION_TARGET): $(COLLISION_SOURCE) $(HEADERS)
 	$(CXX) $(CXXFLAGS) $(COLLISION_SOURCE) -o $(COLLISION_TARGET)
+
+build_avalanche_test: $(AVALANCHE_TARGET)
+
+$(AVALANCHE_TARGET): $(AVALANCHE_SOURCE) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(AVALANCHE_SOURCE) -o $(AVALANCHE_TARGET)
 
 rebuild: clean build
 
