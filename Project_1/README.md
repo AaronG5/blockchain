@@ -16,14 +16,14 @@ Text or a filename (the file must have the `.txt` extension). Input is expected 
 
 ### Input limitations
 
-Only the first 128 bytes of the input are used directly. Bytes after that only affect the hash through the total byte sum, so two inputs with the same first 128 bytes and the same byte sum produce the same hash.
+Only the first 128 bytes of the input are used directly. Bytes after that only affect the hash through the offset from step 3 (`byte sum + 256 * input length`).
 
 ### Step-by-step process
 
 1. The PNG file is read into memory as raw pixel data.
 2. The input is converted into an `int` array (`char[] -> int[]`).
-3. The array is summed into a single `int` value, which is used to offset the starting X and Y coordinates of the pixel lookup in step 4.
-4. The array is processed in groups of four elements, with each group split into two pairs. The product of each pair, plus the offset, is used as the X or Y coordinate of a pixel in the image. If a coordinate exceeds the image resolution, it is wrapped using the modulo operation, and the quotient of the original coordinate divided by the image resolution is added to the result.
+3. The array is summed into a single `int` value, and the input length multiplied by 256 is added to it. The result is used to offset the X and Y coordinates of the pixel lookup in step 4.
+4. The array is processed in groups of four elements, with each group split into two pairs (elements past the end of the array count as 0). Each pair `(a, b)` is combined as `a * 256 + b`. The offset is added to both results, along with the position of the output byte being produced (0–31) multiplied by 7 for X and by 13 for Y, so the same elements point to a different pixel at each output position instead of repeating one pixel. The results are used as the X and Y coordinates of a pixel in the image. If a coordinate exceeds the image resolution, it is wrapped using the modulo operation, and the quotient of the original coordinate divided by the image resolution is added to the result.
 5. The pixel's RGB values are combined with bitwise XOR: `R ^ G ^ B`.
 6. The result is converted to hexadecimal and appended to the hash string.
 7. If the hash is shorter than 64 hex characters, the pixel lookup is run again, with the `int` array shifted by the current iteration count.
