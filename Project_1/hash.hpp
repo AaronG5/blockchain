@@ -27,11 +27,13 @@ struct ImageData {
 // Helper functions
 inline ImageData loadRawImage();
 inline string decToHexStr(const int& decimal);
+inline string decodeSalt(const string& saltHex);
 inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>& inputContent, 
                          const int& inputSum, const int& outputIndex, const int& imageWidth, const int& imageHeight);
 
 // Main hashing function
-inline string hashFunction(const string& input) {
+// saltHex is optional: 16 bytes written as 32 hex characters, appended to the input as raw bytes (input || salt)
+inline string hashFunction(const string& input, const string& saltHex = "") {
    const int HASH_SIZE = 64;
    string hash = "";
 
@@ -41,6 +43,7 @@ inline string hashFunction(const string& input) {
    // Step 2
    vector<int> inputContent;
    for(unsigned char c : input) inputContent.push_back(c);
+   for(unsigned char c : decodeSalt(saltHex)) inputContent.push_back(c);
    const int contentSize = inputContent.size();
    
    if(contentSize <= 0) {
@@ -118,6 +121,22 @@ inline string decToHexStr(const int& decimal) {
    stringstream ss;
    ss << hex << setw(2) << setfill('0') << decimal;
    return ss.str();
+}
+
+inline string decodeSalt(const string& saltHex) {
+   const int SALT_BYTES = 16;
+   if(saltHex.empty()) {
+      return "";
+   }
+   if(saltHex.size() != SALT_BYTES * 2 || saltHex.find_first_not_of("0123456789abcdefABCDEF") != string::npos) {
+      throw runtime_error("Salt must be 32 hex characters (16 bytes)");
+   }
+
+   string salt;
+   for(int i = 0; i < saltHex.size(); i += 2) {
+      salt += static_cast<char>(stoi(saltHex.substr(i, 2), nullptr, 16));
+   }
+   return salt;
 }
 
 inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>& inputContent, 
