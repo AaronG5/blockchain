@@ -21,7 +21,7 @@ Only the first 128 bytes of the input are used directly. Bytes after that only a
 ### Step-by-step process
 
 1. The PNG file is read into memory as raw pixel data.
-2. The input is converted into an `int` array (`char[] -> int[]`).
+2. The input is converted into an `int` array (`char[] -> int[]`). If a salt is given (optional: 16 bytes written as 32 hex characters), it is decoded and its 16 bytes are appended to the array (`input || salt`).
 3. The array is summed into a single `int` value, and the input length multiplied by 256 is added to it. The result is used to offset the X and Y coordinates of the pixel lookup in step 4.
 4. The array is processed in groups of four elements, with each group split into two pairs (elements past the end of the array count as 0). Each pair `(a, b)` is combined as `a * 256 + b`. The offset is added to both results, along with the position of the output byte being produced (0–31) multiplied by 7 for X and by 13 for Y, so the same elements point to a different pixel at each output position instead of repeating one pixel. The results are used as the X and Y coordinates of a pixel in the image. If a coordinate exceeds the image resolution, it is wrapped using the modulo operation, and the quotient of the original coordinate divided by the image resolution is added to the result.
 5. The pixel's RGB values are combined with bitwise XOR: `R ^ G ^ B`.
@@ -62,7 +62,9 @@ The script builds the executables, runs each step in order and prints where the 
 2. [`test_files.py`](Experiment/exp1/test_files.py) tests the generated files. For every file, the script checks that the hash has the correct length and that hashing the content as text gives the same hash as hashing the file. The results are written to [`exp1_results.txt`](Experiment/exp1/exp1_results.txt).
 3. [`gen_konst.py`](Experiment/exp1/gen_konst.py) generates `.txt` snippets of [`konstitucija.txt`](Experiment/exp1/konstitucija.txt) in `gen_konst/`.
 4. [`bench_konst.cpp`](Experiment/exp1/bench_konst.cpp) benchmarks the hash function on each constitution snippet. An untimed warm-up run loads the image into the cache, then each snippet is hashed and timed 10 times. The results are written to `out_konst/bench_konst.csv` and show the filename, file size in bytes, and the average, minimum and maximum hashing time. To run it, use `make build` and then `./Experiment/exp1/bench_konst` from the `Project_1` directory.
-5. [`graph.py`](Experiment/exp1/graph.py) generates a graph from `bench_konst.csv` to visualize the hash function's speed and saves it as `out_konst/bench_graph.png`.
+5. [`graph.py`](Experiment/exp1/graph.py) generates a graph from `bench_konst.csv` to visualize the hash function's speed and saves it as [`out_konst/bench_graph.png`](Experiment/exp1/out_konst/bench_graph.png).
+
+![Benchmark Graph](Experiment/exp1/out_konst/bench_graph.png)
 
 ## 2 Eksperimentinis tyrimas: kolizijos ir lavinos efektas
 
@@ -73,8 +75,6 @@ To run the whole experiment (steps 1–9 below), use [`run_exp2.sh`](Experiment/
 ```bash
 ./Experiment/exp2/run_exp2.sh
 ```
-
-The script builds the executables, runs each step in order and prints where the results were saved. It stops if any step fails.
 
 Steps 1–6 are done by [`collision_test.cpp`](Experiment/exp2/collision_test.cpp), steps 7–8 by [`avalanche_test.cpp`](Experiment/exp2/avalanche_test.cpp) and step 9 by [`avalanche_graph.py`](Experiment/exp2/avalanche_graph.py).
 
@@ -87,3 +87,24 @@ Steps 1–6 are done by [`collision_test.cpp`](Experiment/exp2/collision_test.cp
 7. 100,000 pairs are generated, 25,000 per length, with the same generator and seed as step 1. The two strings in a pair differ in exactly one randomly chosen character, and their hashes are compared by the percentage of differing bits (hex decoded to bytes first) and of differing hex digits.
 8. The minimum, maximum and average of both measures, for each length and for all pairs together, are written to [`avalanche_results.txt`](Experiment/exp2/avalanche_results.txt). The values for each pair are saved in [`out/avalanche.csv`](Experiment/exp2/out/avalanche.csv). On average 45.63% of the bits and 88.66% of the hex digits change, a little below the reference values of 50% and 93.75% for independent, uniformly distributed outputs.
 9. [`avalanche_graph.py`](Experiment/exp2/avalanche_graph.py) draws a histogram of the bit difference percentages from [`avalanche.csv`](Experiment/exp2/out/avalanche.csv) and saves it as [`out/avalanche_hist.png`](Experiment/exp2/out/avalanche_hist.png).
+
+![Bit Difference Histogram](Experiment/exp2/out/avalanche_hist.png)
+
+## 3 Eksperimentinis tyrimas: spėjimas ir išvados
+
+All experiment files are in [`Experiment/exp3/`](Experiment/exp3).
+
+To run the whole experiment (steps 1–4 below), use [`run_exp3.sh`](Experiment/exp3/run_exp3.sh). The results are written to [`exp3_results.txt`](Experiment/exp3/exp3_results.txt).
+
+```bash
+./Experiment/exp3/run_exp3.sh
+```
+
+1. The candidate set is all four-digit strings `0000`–`9999`. The target input `7164` is chosen randomly (`std::mt19937_64`, seed `20261007`). The attack ([`brute_force.cpp`](Experiment/exp3/brute_force.cpp)) receives only the candidate set and the target hash, and tries every candidate to find all matches.
+2. **No salt:** the target was found after 7165 attempts (~22 ms), and it was the only match. A match does not necessarily identify the original input: a different candidate could have the same hash (a collision), so a match only shows that the candidate fits the hash.
+3. **Public salt:** the salt is 16 random bytes, written as 32 hex characters and appended to the input as raw bytes. The attacker knows the salt, so one target takes the same effort as without salt: 7165 attempts (~20 ms). The salt only prevents reuse. Without salt, one table of all 10,000 hashes cracks every target by lookup. With salt, every target has its own salt and needs its own 10,000 hashes: 5 targets took 50,000 hashes (~134 ms) instead of 10,000 (~26 ms).
+4. **Secret salt:** for `H(input || r)` with an unknown 128-bit `r`, the search space grows to `10000 * 2^128` combinations, which is not feasible to brute force. Once `r` is revealed, anyone can check that `H(input || r)` equals the published hash, and the 10,000 candidates can be brute forced again with that `r`.
+
+## Use of AI
+
+Claude Opus 5.5 was used for file generation, shell and benchmarking script writing and improvement.
