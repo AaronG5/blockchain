@@ -28,7 +28,7 @@ struct ImageData {
 inline ImageData loadRawImage();
 inline string decToHexStr(const int& decimal);
 inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>& inputContent, 
-                         const int& inputSum, const int& imageWidth, const int& imageHeight);
+                         const int& inputSum, const int& outputIndex, const int& imageWidth, const int& imageHeight);
 
 // Main hashing function
 inline string hashFunction(const string& input) {
@@ -52,6 +52,7 @@ inline string hashFunction(const string& input) {
    for(int val : inputContent) {
       inputSum += val;
    }
+   inputSum += contentSize * 256;
 
    // Loop used for step 7
    for(int i = 0;; ++i) {
@@ -60,7 +61,8 @@ inline string hashFunction(const string& input) {
 
       // Step 4
       for(int j = 0; j < contentSize; j += 4) {
-         auto idx = getPixelIndex(j, contentSize, inputContent, inputSum, cachedImage.imageWidth, cachedImage.imageHeight);
+         int outputIndex = hash.size() / 2;
+         auto idx = getPixelIndex(j, contentSize, inputContent, inputSum, outputIndex, cachedImage.imageWidth, cachedImage.imageHeight);
          Pixel tempPixel = cachedImage.pixels[idx];
    
          // Steps 5 and 6
@@ -119,14 +121,14 @@ inline string decToHexStr(const int& decimal) {
 }
 
 inline int getPixelIndex(const int& i, const int& contentSize, const vector<int>& inputContent, 
-                         const int& inputSum, const int& imageWidth, const int& imageHeight) {
+                         const int& inputSum, const int& outputIndex, const int& imageWidth, const int& imageHeight) {
    int x1 = inputContent[i];
    int x2 = (i + 1 < contentSize) ? inputContent[i + 1] : 0;
    int y1 = (i + 2 < contentSize) ? inputContent[i + 2] : 0;
    int y2 = (i + 3 < contentSize) ? inputContent[i + 3] : 0;
 
-   int x = x1 * x2 + inputSum;
-   int y = y1 * y2 + inputSum;
+   int x = x1 * 256 + x2 + inputSum + outputIndex * 7;
+   int y = y1 * 256 + y2 + inputSum + outputIndex * 13;
 
    while(x >= imageWidth) {
       x = (x % imageWidth) + (x / imageWidth);

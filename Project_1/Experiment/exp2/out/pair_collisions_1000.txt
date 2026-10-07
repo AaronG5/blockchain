@@ -1,0 +1,3 @@
+Pairwise collisions, length 1000, 100000 pairs
+
+No collisions found.

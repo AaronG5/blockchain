@@ -1,0 +1,155 @@
+== permutations: All 8! orderings of "abcdefgh"
+   40320 distinct inputs, 40320 distinct hashes, 0 collision groups
+   No collisions found.
+
+== permutations_repeated: All distinct orderings of "aabbccdd"
+   2520 distinct inputs, 2520 distinct hashes, 0 collision groups
+   No collisions found.
+
+== rotations: All rotations of 20 random strings (lengths 8, 16, ..., 160)
+   1680 distinct inputs, 1680 distinct hashes, 0 collision groups
+   No collisions found.
+
+== swap_inside_pair: 20 random 64-byte strings, plus each with bytes 2k and 2k+1 swapped (k = 0..31)
+   655 distinct inputs, 655 distinct hashes, 0 collision groups
+   No collisions found.
+
+== swap_across_pair: 20 random 64-byte strings, plus each with bytes 2k+1 and 2k+2 swapped (k = 0..30)
+   637 distinct inputs, 637 distinct hashes, 0 collision groups
+   No collisions found.
+
+== repeated_patterns: Patterns "a", "ab", "abc", "abcd", "0123456789", " " repeated to lengths 1..300
+   1794 distinct inputs, 1794 distinct hashes, 0 collision groups
+   No collisions found.
+
+== short_inputs: Every 1-byte and 2-byte string over the alphabet
+   9120 distinct inputs, 9120 distinct hashes, 0 collision groups
+   No collisions found.
+
+== single_byte_change: 10 random 256-byte strings, plus each with one byte changed to the next alphabet character
+   2570 distinct inputs, 1241 distinct hashes, 34 collision groups
+   Hash 23ef287bff2fea192b12afe8922c92921b175dadf3f59429c7f0ee7bf2113a9a (134 distinct inputs)
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Fc/5-\\l4LN&i-2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0=;Py>P%&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i.2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0=;Py>P%&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V!A&a%q@7u%-0=;Py>P%&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A'a%q@7u%-0=;Py>P%&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0>;Py>P%&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+      ... 129 more inputs
+   Hash df0a6adaea90e512e81614ac05e803fa0a07d3948073f984c81111949395151c (133 distinct inputs)
+      [256 B] "OdK~,T,/Pp{%y]2N)Lbe1bRXYDF>>Y;$GRw~'bn6l2hlsxU3*w:9&<y544RIN-4M-9(":BY-T?|[d]PwvZ+!;a.`'vS\\yjs|Pyo[}],T:$QpRqjb+d*eIUNjA~GXao~l3{)/4-&aJ.0_A#1`iX0xR_gJ%YRwf/GtN\\:XB$wa[nMlaa?V"Fup9}0PJY$0UzrKS`$4RNHYw?oN@2^g0v!>1Ww-!oy>QidMHSYV56$HnS*,re-J`#X9zXh"m8:HNc-:"
+      [256 B] "OdK~,T,/Pp{%y]2N)Lbd1bRXYEF>>Y;$GRw~'bn6l2hlsxU3*w:9&<y544RIN-4M-9(":BY-T?|[d]PwvZ+!;a.`'vS\\yjs|Pyo[}],T:$QpRqjb+d*eIUNjA~GXao~l3{)/4-&aJ.0_A#1`iX0xR_gJ%YRwf/GtN\\:XB$wa[nMlaa?V"Fup9}0PJY$0UzrKS`$4RNHYw?oN@2^g0v!>1Ww-!oy>QidMHSYV56$HnS*,re-J`#X9zXh"m8:HNc-:"
+      [256 B] "OdK~,T,/Pp{%y]2N)Lbd1bRXYDF>>Y;$GRw~'bn6l2hmsxU3*w:9&<y544RIN-4M-9(":BY-T?|[d]PwvZ+!;a.`'vS\\yjs|Pyo[}],T:$QpRqjb+d*eIUNjA~GXao~l3{)/4-&aJ.0_A#1`iX0xR_gJ%YRwf/GtN\\:XB$wa[nMlaa?V"Fup9}0PJY$0UzrKS`$4RNHYw?oN@2^g0v!>1Ww-!oy>QidMHSYV56$HnS*,re-J`#X9zXh"m8:HNc-:"
+      [256 B] "OdK~,T,/Pp{%y]2N)Lbd1bRXYDF>>Y;$GRw~'bn6l2hlsxU3*w:9&<y544RIN-4M-9(":BY-T?|[d]PwvZ+!;a.a'vS\\yjs|Pyo[}],T:$QpRqjb+d*eIUNjA~GXao~l3{)/4-&aJ.0_A#1`iX0xR_gJ%YRwf/GtN\\:XB$wa[nMlaa?V"Fup9}0PJY$0UzrKS`$4RNHYw?oN@2^g0v!>1Ww-!oy>QidMHSYV56$HnS*,re-J`#X9zXh"m8:HNc-:"
+      [256 B] "OdK~,T,/Pp{%y]2N)Lbd1bRXYDF>>Y;$GRw~'bn6l2hlsxU3*w:9&<y544RIN-4M-9(":BY-T?|[d]PwvZ+!;a.`'vS\\yjs|Pyo[}],U:$QpRqjb+d*eIUNjA~GXao~l3{)/4-&aJ.0_A#1`iX0xR_gJ%YRwf/GtN\\:XB$wa[nMlaa?V"Fup9}0PJY$0UzrKS`$4RNHYw?oN@2^g0v!>1Ww-!oy>QidMHSYV56$HnS*,re-J`#X9zXh"m8:HNc-:"
+      ... 128 more inputs
+   Hash 94a598285f8952969b5a1e23a2a99418f564e3542345c79962ff45ade7ee0600 (132 distinct inputs)
+      [256 B] "2bORyo'o>!fR9( +!"*<[V0t0wIh{16eRw*1e7>v ;wa63}uE;pEG,-[Lk 9F@wR{I]AReoL5yc%7Ed>:B$Ile@+/TU{EFAw]b0E]-CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6~p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(:~Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+      [256 B] "2bOQyp'o>!fR9( +!"*<[V0t0wIh{16eRw*1e7>v ;wa63}uE;pEG,-[Lk 9F@wR{I]AReoL5yc%7Ed>:B$Ile@+/TU{EFAw]b0E]-CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6~p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(:~Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+      [256 B] "2bOQyo'o>!fR9( +!"*<[V0t0wIh{16eRw*1e8>v ;wa63}uE;pEG,-[Lk 9F@wR{I]AReoL5yc%7Ed>:B$Ile@+/TU{EFAw]b0E]-CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6~p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(:~Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+      [256 B] "2bOQyo'o>!fR9( +!"*<[V0t0wIh{16eRw*1e7>v ;wa63}vE;pEG,-[Lk 9F@wR{I]AReoL5yc%7Ed>:B$Ile@+/TU{EFAw]b0E]-CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6~p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(:~Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+      [256 B] "2bOQyo'o>!fR9( +!"*<[V0t0wIh{16eRw*1e7>v ;wa63}uE;pEG,-[Lk 9F@wR{I]AReoL5yc%7Ed>:B$Ile@+/TU{EFAw]b0E].CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6~p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(:~Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+      ... 127 more inputs
+   Hash df8b404df89bea58100e79e2f9adab1478478387ec051476e8dffaacc81de014 (132 distinct inputs)
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7daQYrUasaeBA8T2~r"QhO:xG&I@,pT:vQs*]2]TWiu%e21j%Gv.d6*xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)h^}v](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7d`QYrUasaeBA8T2~r#QhO:xG&I@,pT:vQs*]2]TWiu%e21j%Gv.d6*xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)h^}v](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7d`QYrUasaeBA8T2~r"QhO:xG&I@,pT:vQs*]2]TWiu%e21j%Gv.e6*xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)h^}v](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7d`QYrUasaeBA8T2~r"QhO:xG&I@,pT:vQs*]2]TWiu%e21j%Gv.d6+xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)h^}v](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7d`QYrUasaeBA8T2~r"QhO:xG&I@,pT:vQs*]2]TWiu%e21j%Gv.d6*xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)h^}w](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+      ... 127 more inputs
+   Hash 942c826a8a9ba600909f101f29954be1751286ca0aafc9a087969a94a0ab4a92 (131 distinct inputs)
+      [256 B] "(Mx:{|l{y};ZooFx@9Y9v^SkM^^^xhhxu8nD~I>E5W(%KA?+Z?e!yq"]5:MiBCo_}w%%r2)%$k{obKLeDqT /6[{jgeg8<3b0iZe)}pRZ` s.!2cUp]R@J,,.=3cRKx}^$bapD(Y>~']e:.i"o)G3Z4u1aJ(y5K$d9++*Uq<~P#QAev8a}6'0 m\\GJ)HX8sU;4'vT(79M(K^cCpi#HrS)9k-0U)l/]I"Tn'{><+w:T5/'oTp>sy2x&nYC\\W-Vrv\\"
+      [256 B] "(Lx:{|l{y};ZooFy@9Y9v^SkM^^^xhhxu8nD~I>E5W(%KA?+Z?e!yq"]5:MiBCo_}w%%r2)%$k{obKLeDqT /6[{jgeg8<3b0iZe)}pRZ` s.!2cUp]R@J,,.=3cRKx}^$bapD(Y>~']e:.i"o)G3Z4u1aJ(y5K$d9++*Uq<~P#QAev8a}6'0 m\\GJ)HX8sU;4'vT(79M(K^cCpi#HrS)9k-0U)l/]I"Tn'{><+w:T5/'oTp>sy2x&nYC\\W-Vrv\\"
+      [256 B] "(Lx:{|l{y};ZooFx@9Y9v^SkM^^^xhhxu8nD~I>E5W(%KA?+Z?e!yq"^5:MiBCo_}w%%r2)%$k{obKLeDqT /6[{jgeg8<3b0iZe)}pRZ` s.!2cUp]R@J,,.=3cRKx}^$bapD(Y>~']e:.i"o)G3Z4u1aJ(y5K$d9++*Uq<~P#QAev8a}6'0 m\\GJ)HX8sU;4'vT(79M(K^cCpi#HrS)9k-0U)l/]I"Tn'{><+w:T5/'oTp>sy2x&nYC\\W-Vrv\\"
+      [256 B] "(Lx:{|l{y};ZooFx@9Y9v^SkM^^^xhhxu8nD~I>E5W(%KA?+Z?e!yq"]5:MiBCo_}w%%r2)%$k{obKLeDqT /6[{jgeg8<3b0iZe)}pRZ` t.!2cUp]R@J,,.=3cRKx}^$bapD(Y>~']e:.i"o)G3Z4u1aJ(y5K$d9++*Uq<~P#QAev8a}6'0 m\\GJ)HX8sU;4'vT(79M(K^cCpi#HrS)9k-0U)l/]I"Tn'{><+w:T5/'oTp>sy2x&nYC\\W-Vrv\\"
+      [256 B] "(Lx:{|l{y};ZooFx@9Y9v^SkM^^^xhhxu8nD~I>E5W(%KA?+Z?e!yq"]5:MiBCo_}w%%r2)%$k{obKLeDqT /6[{jgeg8<3b0iZe)}pRZ` s.!2cUp]R@J,,.>3cRKx}^$bapD(Y>~']e:.i"o)G3Z4u1aJ(y5K$d9++*Uq<~P#QAev8a}6'0 m\\GJ)HX8sU;4'vT(79M(K^cCpi#HrS)9k-0U)l/]I"Tn'{><+w:T5/'oTp>sy2x&nYC\\W-Vrv\\"
+      ... 126 more inputs
+   Hash af9fb08489e3798caf94cc4a9cc570d7e4e0eb97c7fbfa9e97979088ffc7b703 (131 distinct inputs)
+      [256 B] ",xA]&rOUjM_/dG d.?vB{-!cQA4<KP.B4,h/[X:PR L_*]nKi\\<j.V\\Q<n*yoQS48,9r!x#Kp/sEP@,2)J~/xA0bUC`Q5OJS6(Y>$v10+)%ipNRWraQUPG}yg8afpa+4\\7'&#U6kG~b|0W#jSCN,fv`'b#>Ts[G,0i$Lb[C1{"e^KXV7 B##Pf@bpoB<x qGv5zc7%'k[8cYqZi+2I-APk>&3R#~RSTDgj#_i.?(|hBL|foNVECOg>al|6^X;u2K"
+      [256 B] ",xA]&rOUjM_/dG d.?vB{-!cQA4<KP.B4,h/[X:PR L_*]nKi\\<j.V\\Q<n*yoPS48-9r!x#Kp/sEP@,2)J~/xA0bUC`Q5OJS6(Y>$v10+)%ipNRWraQUPG}yg8afpa+4\\7'&#U6kG~b|0W#jSCN,fv`'b#>Ts[G,0i$Lb[C1{"e^KXV7 B##Pf@bpoB<x qGv5zc7%'k[8cYqZi+2I-APk>&3R#~RSTDgj#_i.?(|hBL|foNVECOg>al|6^X;u2K"
+      [256 B] ",xA]&rOUjM_/dG d.?vB{-!cQA4<KP.B4,h/[X:PR L_*]nKi\\<j.V\\Q<n*yoPS48,9r!x#Kp/sEP@,2)J~/xA0bUD`Q5OJS6(Y>$v10+)%ipNRWraQUPG}yg8afpa+4\\7'&#U6kG~b|0W#jSCN,fv`'b#>Ts[G,0i$Lb[C1{"e^KXV7 B##Pf@bpoB<x qGv5zc7%'k[8cYqZi+2I-APk>&3R#~RSTDgj#_i.?(|hBL|foNVECOg>al|6^X;u2K"
+      [256 B] ",xA]&rOUjM_/dG d.?vB{-!cQA4<KP.B4,h/[X:PR L_*]nKi\\<j.V\\Q<n*yoPS48,9r!x#Kp/sEP@,2)J~/xA0bUC`Q5OJS6(Y>$v10+)%ipNRWrbQUPG}yg8afpa+4\\7'&#U6kG~b|0W#jSCN,fv`'b#>Ts[G,0i$Lb[C1{"e^KXV7 B##Pf@bpoB<x qGv5zc7%'k[8cYqZi+2I-APk>&3R#~RSTDgj#_i.?(|hBL|foNVECOg>al|6^X;u2K"
+      [256 B] ",xA]&rOUjM_/dG d.?vB{-!cQA4<KP.B4,h/[X:PR L_*]nKi\\<j.V\\Q<n*yoPS48,9r!x#Kp/sEP@,2)J~/xA0bUC`Q5OJS6(Y>$v10+)%ipNRWraQUPG}yg8afpa+5\\7'&#U6kG~b|0W#jSCN,fv`'b#>Ts[G,0i$Lb[C1{"e^KXV7 B##Pf@bpoB<x qGv5zc7%'k[8cYqZi+2I-APk>&3R#~RSTDgj#_i.?(|hBL|foNVECOg>al|6^X;u2K"
+      ... 126 more inputs
+   Hash cc3f180b8b7aef0fe60e9f550fe3eead81a3ef94c9931314a5711b9aaade6834 (131 distinct inputs)
+      [256 B] "0Pg+o.sc2FTi>Eg]jXH!VV|hzg]&-HCvnQb&.3l?D#sj6T4=<u!~^a.%{ET@$q2M^aYWh"/n_Z{e*wET}=u?7B2EpM+G9l_|Y*k["cVbMmxcVxg(zQveT]&\\;~h5e={T h<?5^,4C8;!m+=r 1cj#z9au\\MLP`qhYp+%Mf1v!y&gh[C!^jo{MHA&oEVKv@2Cz=6@RxX>#bhE&^8R`YrtlrBMZWdQ|TU8v2OM"MqEC+yi+dfW%R`9CM3|)0]<O,+V"
+      [256 B] "0Pg+o.sc2FTi>Eg]jXH!VV|hzg]&-HCvnQb&.3l?D#sj6T4=<u!~^a.%{ET@$q2M^`YWh"/n_Z{f*wET}=u?7B2EpM+G9l_|Y*k["cVbMmxcVxg(zQveT]&\\;~h5e={T h<?5^,4C8;!m+=r 1cj#z9au\\MLP`qhYp+%Mf1v!y&gh[C!^jo{MHA&oEVKv@2Cz=6@RxX>#bhE&^8R`YrtlrBMZWdQ|TU8v2OM"MqEC+yi+dfW%R`9CM3|)0]<O,+V"
+      [256 B] "0Pg+o.sc2FTi>Eg]jXH!VV|hzg]&-HCvnQb&.3l?D#sj6T4=<u!~^a.%{ET@$q2M^`YWh"/n_Z{e*wET}=u?7B2EpM+G9l_|Z*k["cVbMmxcVxg(zQveT]&\\;~h5e={T h<?5^,4C8;!m+=r 1cj#z9au\\MLP`qhYp+%Mf1v!y&gh[C!^jo{MHA&oEVKv@2Cz=6@RxX>#bhE&^8R`YrtlrBMZWdQ|TU8v2OM"MqEC+yi+dfW%R`9CM3|)0]<O,+V"
+      [256 B] "0Pg+o.sc2FTi>Eg]jXH!VV|hzg]&-HCvnQb&.3l?D#sj6T4=<u!~^a.%{ET@$q2M^`YWh"/n_Z{e*wET}=u?7B2EpM+G9l_|Y*k["cVbMmxcVxg(zQveT]&\\;~h5e={T!h<?5^,4C8;!m+=r 1cj#z9au\\MLP`qhYp+%Mf1v!y&gh[C!^jo{MHA&oEVKv@2Cz=6@RxX>#bhE&^8R`YrtlrBMZWdQ|TU8v2OM"MqEC+yi+dfW%R`9CM3|)0]<O,+V"
+      [256 B] "0Pg+o.sc2FTi>Eg]jXH!VV|hzg]&-HCvnQb&.3l?D#sj6T4=<u!~^a.%{ET@$q2M^`YWh"/n_Z{e*wET}=u?7B2EpM+G9l_|Y*k["cVbMmxcVxg(zQveT]&\\;~h5e={T i<?5^,4C8;!m+=r 1cj#z9au\\MLP`qhYp+%Mf1v!y&gh[C!^jo{MHA&oEVKv@2Cz=6@RxX>#bhE&^8R`YrtlrBMZWdQ|TU8v2OM"MqEC+yi+dfW%R`9CM3|)0]<O,+V"
+      ... 126 more inputs
+   Hash b55cd90794f71605d20596e791bae6b1c5001e3404806489ce91a0ebcf99b884 (130 distinct inputs)
+      [256 B] "x&r-D\\5K[@;#X122$U|~=:fE:R=RgaqsO,T+e8qK\\;t1yYOdolz:{yo?b!AO!Vu$-PZv$W@s<&1$NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I PR`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+      [256 B] "x&r-D\\5K[?;$X122$U|~=:fE:R=RgaqsO,T+e8qK\\;t1yYOdolz:{yo?b!AO!Vu$-PZv$W@s<&1$NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I PR`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+      [256 B] "x&r-D\\5K[?;#X122$U|~=:fE:R=RgaqsO,T+e8qK\\;t1yYOdolz:{yo?b!AO!Vu$-PZv$W@s<&1%NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I PR`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+      [256 B] "x&r-D\\5K[?;#X122$U|~=:fE:R=RgaqsO,T+e8qK\\;t1yYOdolz:{yo?b!AO!Vu$-PZv$W@s<&1$NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I QR`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+      [256 B] "x&r-D\\5K[?;#X122$U|~=:fE:R=RgaqsO,T+e8qK\\;t1yYOdolz:{yo?b!AO!Vu$-PZv$W@s<&1$NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I PS`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+      ... 125 more inputs
+   Hash dd84630c58ff979a958a81f298e2fd22bc15718dc505122a4183f03fbe87051b (130 distinct inputs)
+      [256 B] "`ha-`=d{JeT_39G e%aYG;qAjZSQkPdkLy+G91zU/d<8F+vLyTWSycPnd7M?H?#=3'amw@q$g6Rl&Lsul$<Nnj)qA9(N2&hkVi/R2@VUxiU"EMolv%uG"4;&{[h3Uao&Q/E|2n8?|"N0HK`I+Z\\~/9S~R^T_;W}\\P9$aZV6hp|wW[\\:/gO4qCqbzj55|[KQ1tC*%L+\\yvCv$2f4LaBJ1D9d0W4^HXIfA:'@r^SQB{1`AI<<I*m,>r`=yVj&T0tE%"
+      [256 B] "`ha-`=d{JeT_39G e%aYG;qAjZSQkPdkLx+G91zU/d<8F+vLyTWSycPnd7M?H?#=3'amwAq$g6Rl&Lsul$<Nnj)qA9(N2&hkVi/R2@VUxiU"EMolv%uG"4;&{[h3Uao&Q/E|2n8?|"N0HK`I+Z\\~/9S~R^T_;W}\\P9$aZV6hp|wW[\\:/gO4qCqbzj55|[KQ1tC*%L+\\yvCv$2f4LaBJ1D9d0W4^HXIfA:'@r^SQB{1`AI<<I*m,>r`=yVj&T0tE%"
+      [256 B] "`ha-`=d{JeT_39G e%aYG;qAjZSQkPdkLx+G91zU/d<8F+vLyTWSycPnd7M?H?#=3'amw@q$g6Rl&Lsul$<Nnj)qA:(N2&hkVi/R2@VUxiU"EMolv%uG"4;&{[h3Uao&Q/E|2n8?|"N0HK`I+Z\\~/9S~R^T_;W}\\P9$aZV6hp|wW[\\:/gO4qCqbzj55|[KQ1tC*%L+\\yvCv$2f4LaBJ1D9d0W4^HXIfA:'@r^SQB{1`AI<<I*m,>r`=yVj&T0tE%"
+      [256 B] "`ha-`=d{JeT_39G e%aYG;qAjZSQkPdkLx+G91zU/d<8F+vLyTWSycPnd7M?H?#=3'amw@q$g6Rl&Lsul$<Nnj)qA9(O2&hkVi/R2@VUxiU"EMolv%uG"4;&{[h3Uao&Q/E|2n8?|"N0HK`I+Z\\~/9S~R^T_;W}\\P9$aZV6hp|wW[\\:/gO4qCqbzj55|[KQ1tC*%L+\\yvCv$2f4LaBJ1D9d0W4^HXIfA:'@r^SQB{1`AI<<I*m,>r`=yVj&T0tE%"
+      [256 B] "`ha-`=d{JeT_39G e%aYG;qAjZSQkPdkLx+G91zU/d<8F+vLyTWSycPnd7M?H?#=3'amw@q$g6Rl&Lsul$<Nnj)qA9(N2&hkVi/R2@VUxiU"EMolv%uG"4;&{[h3Uao&R/E|2n8?|"N0HK`I+Z\\~/9S~R^T_;W}\\P9$aZV6hp|wW[\\:/gO4qCqbzj55|[KQ1tC*%L+\\yvCv$2f4LaBJ1D9d0W4^HXIfA:'@r^SQB{1`AI<<I*m,>r`=yVj&T0tE%"
+      ... 125 more inputs
+   Hash 8c000bad641a04071d80e91b935a7bb892d2a4f11dff9fe967676ae17611fd05 (130 distinct inputs)
+      [256 B] "/P{s+T)k_7R.r.ui9(F.'W@Z[;qd-f*Y@Ew?1zRG[2pR/1H!jkTR0/7=i=_HXj}\\Y*K[>T3+:QntmG(WuGhw-z[i"l2`<:WLP~;7_~*Ku]FKml !i,uj1+Ax~>K3c-J:P.Awq.EmZ4.<G+2El3Oeu]71 ~QGT]Tooq;%T>4:L5?KEWv&F Wvne=H.B8/@|;MJPkTr}^$]k[IdU4<0ar2s|*}4C*+|+'LTOl$Do~8"c~X]`h`I^P1;Hut.@u#Z}mU"
+      [256 B] "/P{s+T)k_7R.r.ti9(F.'W@Z[;qd-f*Y@Ew?1zRG[2pR/2H!jkTR0/7=i=_HXj}\\Y*K[>T3+:QntmG(WuGhw-z[i"l2`<:WLP~;7_~*Ku]FKml !i,uj1+Ax~>K3c-J:P.Awq.EmZ4.<G+2El3Oeu]71 ~QGT]Tooq;%T>4:L5?KEWv&F Wvne=H.B8/@|;MJPkTr}^$]k[IdU4<0ar2s|*}4C*+|+'LTOl$Do~8"c~X]`h`I^P1;Hut.@u#Z}mU"
+      [256 B] "/P{s+T)k_7R.r.ti9(F.'W@Z[;qd-f*Y@Ew?1zRG[2pR/1H!jkTR0/7=i=_HXj}]Y*K[>T3+:QntmG(WuGhw-z[i"l2`<:WLP~;7_~*Ku]FKml !i,uj1+Ax~>K3c-J:P.Awq.EmZ4.<G+2El3Oeu]71 ~QGT]Tooq;%T>4:L5?KEWv&F Wvne=H.B8/@|;MJPkTr}^$]k[IdU4<0ar2s|*}4C*+|+'LTOl$Do~8"c~X]`h`I^P1;Hut.@u#Z}mU"
+      [256 B] "/P{s+T)k_7R.r.ti9(F.'W@Z[;qd-f*Y@Ew?1zRG[2pR/1H!jkTR0/7=i=_HXj}\\Y*K[>T3+:QnumG(WuGhw-z[i"l2`<:WLP~;7_~*Ku]FKml !i,uj1+Ax~>K3c-J:P.Awq.EmZ4.<G+2El3Oeu]71 ~QGT]Tooq;%T>4:L5?KEWv&F Wvne=H.B8/@|;MJPkTr}^$]k[IdU4<0ar2s|*}4C*+|+'LTOl$Do~8"c~X]`h`I^P1;Hut.@u#Z}mU"
+      [256 B] "/P{s+T)k_7R.r.ti9(F.'W@Z[;qd-f*Y@Ew?1zRG[2pR/1H!jkTR0/7=i=_HXj}\\Y*K[>T3+:QntmG(WuGiw-z[i"l2`<:WLP~;7_~*Ku]FKml !i,uj1+Ax~>K3c-J:P.Awq.EmZ4.<G+2El3Oeu]71 ~QGT]Tooq;%T>4:L5?KEWv&F Wvne=H.B8/@|;MJPkTr}^$]k[IdU4<0ar2s|*}4C*+|+'LTOl$Do~8"c~X]`h`I^P1;Hut.@u#Z}mU"
+      ... 125 more inputs
+   Hash 90fc7b7d762924ec9008faa0e5f086ec9121b2c90afba0e0a4d610c81a7793f7 (3 distinct inputs)
+      [256 B] "/P{s+T)k_7R.r.ti9(F.'W@Z[;qd-f*Y@Ew?1zRG[2pR/1H!jkTR0/7=i=_HXj}\\Y*K[>T3+:QntmG(WuGhw-z[i"l2`<:WLP~;7_~*Ku]FKml !i,uj1+Ax~>K3c-J:P.Awq.EmZ4.<G+2El3Oeu]71  QGT]Tooq;%T>4:L5?KEWv&F Wvne=H.B8/@|;MJPkTr}^$]k[IdU4<0ar2s|*}4C*+|+'LTOl$Do~8"c~X]`h`I^P1;Hut.@u#Z}mU"
+      [256 B] "/P{s+T)k_7R.r.ti9(F.'W@Z[;qd-f*Y@Ew?1zRG[2pR/1H!jkTR0/7=i=_HXj}\\Y*K[>T3+:QntmG(WuGhw-z[i"l2`<:WLP~;7_~*Ku]FKml !i,uj1+Ax~>K3c-J:P.Awq.EmZ4.<G+2El3Oeu]71 ~QGT]Tooq;%T>4:L5?KEWv&F Wvne=H.B8/@|;MJPkTr}^$]k[IdU4<0ar2s|*}4C*+|+'LTOl$Do 8"c~X]`h`I^P1;Hut.@u#Z}mU"
+      [256 B] "/P{s+T)k_7R.r.ti9(F.'W@Z[;qd-f*Y@Ew?1zRG[2pR/1H!jkTR0/7=i=_HXj}\\Y*K[>T3+:QntmG(WuGhw-z[i"l2`<:WLP~;7_~*Ku]FKml !i,uj1+Ax~>K3c-J:P.Awq.EmZ4.<G+2El3Oeu]71 ~QGT]Tooq;%T>4:L5?KEWv&F Wvne=H.B8/@|;MJPkTr}^$]k[IdU4<0ar2s|*}4C*+|+'LTOl$Do~8"c X]`h`I^P1;Hut.@u#Z}mU"
+   Hash 94a598285f8952969b5a1e23a2a99418f564f1542345c79962ff45ade7ee0600 (2 distinct inputs)
+      [256 B] "2bOQyo'o>!fR9( +!"*<[V0t0wIh{16eRw*1e7>v ;wa63}uE;pEG,-[Lk 9F@wR{I]AReoL5zc%7Ed>:B$Ile@+/TU{EFAw]b0E]-CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6~p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(:~Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+      [256 B] "2bOQyo'o>!fR9( +!"*<[V0t0wIh{16eRw*1e7>v ;wa63}uE;pEG,-[Lk 9F@wR{I]AReoL5yc&7Ed>:B$Ile@+/TU{EFAw]b0E]-CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6~p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(:~Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+   Hash 3cebab8685d709278af5a9fd9f0e02b6929a037a6adc37878be34292f76db6bf (2 distinct inputs)
+      [256 B] "2bOQyo'o>!fR9( +!"*<[V0t0wIh{16eRw*1e7>v ;wa63}uE;pEG,-[Lk 9F@wR{I]AReoL5yc%7Ed>:B$Ile@+/TU{EFAw]b0E]-CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6 p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(:~Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+      [256 B] "2bOQyo'o>!fR9( +!"*<[V0t0wIh{16eRw*1e7>v ;wa63}uE;pEG,-[Lk 9F@wR{I]AReoL5yc%7Ed>:B$Ile@+/TU{EFAw]b0E]-CiH2LtR^IV-AL#uagBh|gDVq|ZM(;"3q}"rKPSsT6~p[GH^=B8\\EMh5NLB`lvLz#X6T=H^;(QyR<FfI8#cnjx/z^3u{FdX?_b`56w8R,lH@(: Ogz!}Qs]Pgt\\&^VF;ai/)rEfxKA5<j:>EHFdvgtYFa[$"
+   Hash df8b404df89bea58100e79e2f9adab1478478387ec971476e8dffaacc81de014 (2 distinct inputs)
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7d`QYrUasaeBA8T2~r"QhO:xG&I@,pT:vQs*]2]TWiu%e21k%Gv.d6*xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)h^}v](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7d`QYrUasaeBA8T2~r"QhO:xG&I@,pT:vQs*]2]TWiu%e21j%Hv.d6*xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)h^}v](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+   Hash df8b404df89bea58100e79e2f9adab1478478387ec051476e8dffaacc81de0eb (2 distinct inputs)
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7d`QYrUasaeBA8T2~r"QhO:xG&I@,pT:vQs*]2]TWiu%e21j%Gv.d6*xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)i^}v](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+      [256 B] "'r=\\]n<!p(dSO_-Ozv,?P;ULsiAF.nb1C>_/w7d`QYrUasaeBA8T2~r"QhO:xG&I@,pT:vQs*]2]TWiu%e21j%Gv.d6*xRq6QU<by1nH|T|uI{[U+D1"2}"cnt4H)h^~v](r.Ku>^b)g^+}7U Ony323` ]EPqkmzm/k ilLwYL-Q/wv=%pETdwet4B[/S _.d:*k?Aj\\QO6YpLy#?FB|:8KRBbNCaASyT\\C='?DG2Jrsqlp.0:V6fwTrkNE,_w^"
+   Hash 23ef287bff2fea192b1291e8922c92921b175dadf3f59429c7f0ee7bf2113a9a (2 distinct inputs)
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-3}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0=;Py>P%&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-2~d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0=;Py>P%&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+   Hash 23ef287bff2fea192b12afe8922c92921b175dadf3f59429f3f0ee7bf2113a9a (2 distinct inputs)
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0=;Py?P%&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0=;Py>P&&]G_SRM$<#7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+   Hash 23ef287bff2fea192b12afe8922c92921b175dadf3f59429c7f0eef6f2113a9a (2 distinct inputs)
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0=;Py>P%&]G_SRM$<$7BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+      [256 B] "9~,fxgp>5VJ[b|?sP*Aw @dlIb!Ec/5-\\l4LN&i-2}d] j 'c)]D47\\*=P~Vs0/E@c:Jv8NsZVx{<Kt^V A&a%q@7u%-0=;Py>P%&]G_SRM$<#8BYK=RSA))FoK9^ZhC0{Pol05fZB+dPos[75<59o,w5z8QO Y-mz5sw?T!_IR6P[W=Br?m/+fmfb0/^GmNO?DyN=oht.xGzXsXo,":6}6XBFqLup)wL!0@tl\\*KWB5]?'<^UOnDMOx7'%r%XMa"
+   Hash b55cd90794f7e405d20596e791bae6b1c5001e3404806489ce91a0ebcf99b884 (2 distinct inputs)
+      [256 B] "x&r-D\\5K[?;#X122$U|~=:fE:S=RgaqsO,T+e8qK\\;t1yYOdolz:{yo?b!AO!Vu$-PZv$W@s<&1$NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I PR`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+      [256 B] "x&r-D\\5K[?;#X122$U|~=:fE:R=SgaqsO,T+e8qK\\;t1yYOdolz:{yo?b!AO!Vu$-PZv$W@s<&1$NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I PR`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+   Hash b55cd90794f71605d20596f791bae6b1c5001e3404806489ce91a0ebcf99b884 (2 distinct inputs)
+      [256 B] "x&r-D\\5K[?;#X122$U|~=:fE:R=RgaqsO,T+e8qK\\;t1yZOdolz:{yo?b!AO!Vu$-PZv$W@s<&1$NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I PR`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+      [256 B] "x&r-D\\5K[?;#X122$U|~=:fE:R=RgaqsO,T+e8qK\\;t1yYOeolz:{yo?b!AO!Vu$-PZv$W@s<&1$NyCG-XXt1md\\lQ)$MA4oUj`(GbrH?TFPUz)>c1b'm&j2v26+! I PR`LOY1}ABycwV:tS1olDp5rOq8t)z5$DRXI^/|k=/no4ecrL7}w*xS/8U-rN&fG2-#|f>@D:A"a};OZGeG+yMIfaV!M'@vN~q){-= );1NLgesLP*kb9o(/TJY1(wzY"
+   ... 14 more groups not shown
+
+== same_sum_change: 10 random 64-byte strings, plus each with byte i increased and byte i+1 decreased by 1
+   625 distinct inputs, 625 distinct hashes, 0 collision groups
+   No collisions found.
+
+== tail_after_128: Random 128-byte prefix followed by every ordering of "abcdef"
+   720 distinct inputs, 1 distinct hashes, 1 collision groups
+   Hash ac69b4414bff8455031ffbaef79da3884954c21281f59ecae1130ee094109e4d (720 distinct inputs)
+      [134 B] "^^}YDyK^CiewthdqN/DEk3>)wadq6=^Fcs:3\\#;1%usRTJLFw1 ]<rh[6v.ux|U-.51/I'M8pBoW"!C":gT%XgMB$w<O7u4#4R_6z#YxKN9NT=A&!_epZ7_/P=".JbAFabcdef"
+      [134 B] "^^}YDyK^CiewthdqN/DEk3>)wadq6=^Fcs:3\\#;1%usRTJLFw1 ]<rh[6v.ux|U-.51/I'M8pBoW"!C":gT%XgMB$w<O7u4#4R_6z#YxKN9NT=A&!_epZ7_/P=".JbAFabcdfe"
+      [134 B] "^^}YDyK^CiewthdqN/DEk3>)wadq6=^Fcs:3\\#;1%usRTJLFw1 ]<rh[6v.ux|U-.51/I'M8pBoW"!C":gT%XgMB$w<O7u4#4R_6z#YxKN9NT=A&!_epZ7_/P=".JbAFabcedf"
+      [134 B] "^^}YDyK^CiewthdqN/DEk3>)wadq6=^Fcs:3\\#;1%usRTJLFw1 ]<rh[6v.ux|U-.51/I'M8pBoW"!C":gT%XgMB$w<O7u4#4R_6z#YxKN9NT=A&!_epZ7_/P=".JbAFabcefd"
+      [134 B] "^^}YDyK^CiewthdqN/DEk3>)wadq6=^Fcs:3\\#;1%usRTJLFw1 ]<rh[6v.ux|U-.51/I'M8pBoW"!C":gT%XgMB$w<O7u4#4R_6z#YxKN9NT=A&!_epZ7_/P=".JbAFabcfde"
+      ... 715 more inputs
+
+== zero_padding: 20 random strings (lengths 5..24), each followed by 0..8 NUL bytes
+   180 distinct inputs, 180 distinct hashes, 0 collision groups
+   No collisions found.
+
+== whitespace: 50 short words with leading, trailing and doubled spaces
+   300 distinct inputs, 300 distinct hashes, 0 collision groups
+   No collisions found.
+
