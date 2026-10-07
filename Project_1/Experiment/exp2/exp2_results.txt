@@ -8,9 +8,9 @@ Pairs per length: 100000 (the two inputs of a pair always differ)
 Length      Pairs  Pair coll.    Inputs  Distinct    Hashes  Coll. grps Coll. pairs    Time s
 ---------------------------------------------------------------------------------------------
 10         100000           0    200000    200000    200000           0           0      0.63
-100        100000           0    200000    200000    200000           0           0      0.62
-500        100000           0    200000    200000    200000           0           0      0.95
-1000       100000           0    200000    200000    200000           0           0      1.29
+100        100000           0    200000    200000    200000           0           0      0.54
+500        100000           0    200000    200000    200000           0           0      0.82
+1000       100000           0    200000    200000    200000           0           0      1.17
 
 Pair coll.:  pairs whose two inputs got the same hash
 Distinct:    distinct inputs among all 2 * pairs inputs of that length
@@ -37,14 +37,14 @@ Category                   Inputs  Distinct    Hashes  Coll. grps  Coll. inputs
 permutations                40320     40320     40320           0             0
 permutations_repeated        2520      2520      2520           0             0
 rotations                    1680      1680      1680           0             0
-swap_inside_pair              660       655       654           1             2
-swap_across_pair              640       637       634           2             5
-repeated_patterns            1800      1794      1218         172           748
-short_inputs                 9120      9120       256         256          9120
-single_byte_change           2570      2570      1267          42          1345
+swap_inside_pair              660       655       655           0             0
+swap_across_pair              640       637       637           0             0
+repeated_patterns            1800      1794      1794           0             0
+short_inputs                 9120      9120      9120           0             0
+single_byte_change           2570      2570      1241          34          1363
 same_sum_change               625       625       625           0             0
 tail_after_128                720       720         1           1           720
-zero_padding                  180       180       175           3             8
+zero_padding                  180       180       180           0             0
 whitespace                    300       300       300           0             0
 
 Category descriptions and collision examples: out/structured_collisions.txt
