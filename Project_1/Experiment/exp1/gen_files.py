@@ -52,7 +52,7 @@ def mutate_one_byte(rng: random.Random, data: bytes, pos: int):
 
 def main():
    ap = argparse.ArgumentParser()
-   ap.add_argument("--seed", type=int, default=12345, help="RNG seed")
+   ap.add_argument("--seed", type=int, default=20261007, help="RNG seed")
    args = ap.parse_args()
 
    rng = random.Random(args.seed)
