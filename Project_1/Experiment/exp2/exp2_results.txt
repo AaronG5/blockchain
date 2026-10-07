@@ -7,10 +7,10 @@ Pairs per length: 100000 (the two inputs of a pair always differ)
 
 Length      Pairs  Pair coll.    Inputs  Distinct    Hashes  Coll. grps Coll. pairs    Time s
 ---------------------------------------------------------------------------------------------
-10         100000           0    200000    200000    200000           0           0      0.63
-100        100000           0    200000    200000    200000           0           0      0.54
-500        100000           0    200000    200000    200000           0           0      0.82
-1000       100000           0    200000    200000    200000           0           0      1.17
+10         100000           0    200000    200000    200000           0           0      0.56
+100        100000           0    200000    200000    200000           0           0      0.55
+500        100000           0    200000    200000    200000           0           0      0.84
+1000       100000           0    200000    200000    200000           0           0      1.21
 
 Pair coll.:  pairs whose two inputs got the same hash
 Distinct:    distinct inputs among all 2 * pairs inputs of that length

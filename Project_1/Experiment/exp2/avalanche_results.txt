@@ -1,0 +1,16 @@
+Alphabet: 95 printable ASCII characters, 0x20 (space) to 0x7E (~), 1 byte each
+Generator: std::mt19937_64, seed 20261007 + length
+Pairs: 100000 (25000 per length), each pair differs in exactly one character
+
+                            Bit difference (%)            Hex difference (%)
+Length     Pairs       Min       Max       Avg       Min       Max       Avg
+----------------------------------------------------------------------------
+10         25000     32.03     60.94     46.10     64.06    100.00     89.15
+100        25000     31.64     57.81     45.49     65.62    100.00     88.51
+500        25000     29.30     60.16     45.45     62.50    100.00     88.45
+1000       25000     27.34     60.16     45.49     62.50    100.00     88.52
+----------------------------------------------------------------------------
+All       100000     27.34     60.94     45.63     62.50    100.00     88.66
+
+Reference averages for independent, uniform outputs: 50% of bits, 93.75% of hex digits.
+Per-pair values for the histogram: out/avalanche.csv
