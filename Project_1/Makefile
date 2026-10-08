@@ -17,13 +17,18 @@ BRUTE_FORCE_SOURCE = $(EXP3_DIR)/brute_force.cpp
 EXP4_DIR = Experiment/exp4
 COMPARE_TARGET = $(EXP4_DIR)/compare
 COMPARE_SOURCE = $(EXP4_DIR)/compare.cpp
-TARGETS = $(CLI_TARGET) $(CLI_V2_TARGET) $(BENCH_KONST_TARGET) $(COLLISION_TARGET) $(AVALANCHE_TARGET) $(BRUTE_FORCE_TARGET) $(COMPARE_TARGET)
+EXP5_DIR = Experiment/exp5
+COMPARE_SHA256_TARGET = $(EXP5_DIR)/compare_sha256
+COMPARE_SHA256_SOURCE = $(EXP5_DIR)/compare_sha256.cpp
+# OpenSSL provides SHA-256 for experiment 5 (pkg-config finds Homebrew's OpenSSL on macOS)
+OPENSSL_FLAGS = $(shell pkg-config --cflags --libs openssl 2>/dev/null || echo -lcrypto)
+TARGETS = $(CLI_TARGET) $(CLI_V2_TARGET) $(BENCH_KONST_TARGET) $(COLLISION_TARGET) $(AVALANCHE_TARGET) $(BRUTE_FORCE_TARGET) $(COMPARE_TARGET) $(COMPARE_SHA256_TARGET)
 HEADERS = hash.hpp stb_image.h
 HEADERS_V2 = hash_v2.hpp stb_image.h
 
 .PHONY: build rebuild clean
 
-build: build_cli build_cli_v2 build_bench_konst build_collision_test build_avalanche_test build_brute_force build_compare
+build: build_cli build_cli_v2 build_bench_konst build_collision_test build_avalanche_test build_brute_force build_compare build_compare_sha256
 
 build_cli: $(CLI_TARGET)
 
@@ -59,6 +64,11 @@ build_compare: $(COMPARE_TARGET)
 
 $(COMPARE_TARGET): $(COMPARE_SOURCE) $(HEADERS) $(HEADERS_V2)
 	$(CXX) $(CXXFLAGS) $(COMPARE_SOURCE) -o $(COMPARE_TARGET)
+
+build_compare_sha256: $(COMPARE_SHA256_TARGET)
+
+$(COMPARE_SHA256_TARGET): $(COMPARE_SHA256_SOURCE) $(HEADERS_V2)
+	$(CXX) $(CXXFLAGS) $(COMPARE_SHA256_SOURCE) $(OPENSSL_FLAGS) -o $(COMPARE_SHA256_TARGET)
 
 rebuild: clean build
 
