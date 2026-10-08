@@ -30,7 +30,7 @@ Only the first 128 bytes of the input are used directly. Bytes after that only a
 8. If the hash is longer than 64 hex characters, it is truncated to 64 characters.
 9. The hash is returned.
 
-### Running the hash function (macOS or Linux)
+### Running the hash function
 
 From the `Project_1` directory:
 
@@ -105,6 +105,70 @@ To run the whole experiment (steps 1–4 below), use [`run_exp3.sh`](Experiment/
 3. **Public salt:** the salt is 16 random bytes, written as 32 hex characters and appended to the input as raw bytes. The attacker knows the salt, so one target takes the same effort as without salt: 7165 attempts (~20 ms). The salt only prevents reuse. Without salt, one table of all 10,000 hashes cracks every target by lookup. With salt, every target has its own salt and needs its own 10,000 hashes: 5 targets took 50,000 hashes (~134 ms) instead of 10,000 (~26 ms).
 4. **Secret salt:** for `H(input || r)` with an unknown 128-bit `r`, the search space grows to `10000 * 2^128` combinations, which is not feasible to brute force. Once `r` is revealed, anyone can check that `H(input || r)` equals the published hash, and the 10,000 candidates can be brute forced again with that `r`.
 
+## Improved hash function
+
+### Description
+
+An improved version of the image-based hash function. The image is still the only source of randomness, but instead of turning pixels directly into output bytes, it uses them to steer four "walkers" across the image. No outside hash functions, constants or random number generators are used.
+
+### How it works
+
+A PNG image named [`image.png`](image.png) must be present in the directory the program is run from.
+
+The hash function is implemented in [`hash_v2.hpp`](hash_v2.hpp) as `hash_v2::hashFunction(input, saltHex)`.
+
+### Input
+
+Same as the original: text or a filename (the file must have the `.txt` extension). Empty input also gets a hash.
+
+### Input limitations
+
+None: every byte of the input is used.
+
+### Step-by-step process
+
+1. The PNG file is read into memory as an array of 24-bit colours (`0xRRGGBB`). A walker's position in the image is its value modulo the largest prime not bigger than the pixel count (3,145,721 for 1536 × 2048), so all 64 bits of the walker decide which pixel it is on.
+2. The four walkers (four 64-bit numbers, 256 bits in total) get their starting values from pixels on the image diagonal and then take 32 steps without input.
+3. The input is joined with the salt, if one is given (optional: 16 bytes written as 32 hex characters, `input || salt`), and split into 8-byte blocks. The last block is filled up with zero bytes.
+4. Each block moves one walker, taking turns (0, 1, 2, 3, 0, ...). The walker reads the colour of the pixel it is on, XORs the block into its value, rotates it left by 13 bits, and adds the colour (as `(colour << 20) + colour`, so it covers more bits) and the next walker. Its new value puts it on a different pixel.
+5. The walker that moved then changes the next walker (XOR with its own value rotated left by 37 bits), so that walker also moves to another pixel and reads a different colour on its own turn.
+6. One more step uses the input length as the block, so the zero bytes added in step 3 give a different hash from real zero bytes.
+7. The walkers take 32 more steps without input (8 each), so every output bit depends on every input byte.
+8. The four walkers are converted to hexadecimal (16 characters each) and joined into the 64-character hash.
+9. The hash is returned.
+
+### Running the hash function
+
+From the `Project_1` directory:
+
+```bash
+make build
+./cli_hasher_v2
+```
+
+### Comparison with the original
+
+[`Experiment/exp4/compare.cpp`](Experiment/exp4/compare.cpp) runs the tests from experiments 1–3 on both hashes, with the same inputs and seeds. The results are written to [`exp4_results.txt`](Experiment/exp4/exp4_results.txt) and the graphs to `Experiment/exp4/out/`. To run it:
+
+```bash
+./Experiment/exp4/run_exp4.sh
+```
+
+| Test | Original | Improved |
+|---|---|---|
+| Empty input | rejected | hashed |
+| Random collisions (800,000 strings) | 0 | 0 |
+| `single_byte_change` colliding inputs | 1363 of 2570 | 0 |
+| `tail_after_128` distinct hashes | 1 of 720 | 720 of 720 |
+| Avalanche, average bits / hex digits changed | 45.63% / 88.66% | 50.00% / 93.76% |
+| Speed, 70 B / 75 KB file | 0.0027 / 0.035 ms | 0.0005 / 0.126 ms |
+
+The improved hash has no collisions in any test and matches the reference avalanche values. It is faster on inputs up to about 4 KB and slower on larger ones, because the original hash only uses the first 128 bytes directly, while the improved one reads every byte.
+
+![Avalanche Comparison](Experiment/exp4/out/avalanche_compare.png)
+
+![Speed Comparison](Experiment/exp4/out/bench_compare.png)
+
 ## Use of AI
 
-Claude Opus 5.5 was used for file generation, shell and benchmarking script writing and improvement.
+Claude Opus 5.5 was used for file generation, shell and benchmarking script writing and improvement. v0.2.0 of the hash function was improved with the help of AI.
