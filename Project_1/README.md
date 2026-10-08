@@ -154,20 +154,69 @@ make build
 ./Experiment/exp4/run_exp4.sh
 ```
 
-| Test | Original | Improved |
-|---|---|---|
-| Empty input | rejected | hashed |
-| Random collisions (800,000 strings) | 0 | 0 |
-| `single_byte_change` colliding inputs | 1363 of 2570 | 0 |
-| `tail_after_128` distinct hashes | 1 of 720 | 720 of 720 |
-| Avalanche, average bits / hex digits changed | 45.63% / 88.66% | 50.00% / 93.76% |
-| Speed, 70 B / 75 KB file | 0.0027 / 0.035 ms | 0.0005 / 0.126 ms |
+| Test                                         | Original          | Improved          |
+| -------------------------------------------- | ----------------- | ----------------- |
+| Empty input                                  | rejected          | hashed            |
+| Random collisions (800,000 strings)          | 0                 | 0                 |
+| `single_byte_change` colliding inputs        | 1363 of 2570      | 0                 |
+| `tail_after_128` distinct hashes             | 1 of 720          | 720 of 720        |
+| Avalanche, average bits / hex digits changed | 45.63% / 88.66%   | 50.00% / 93.76%   |
+| Speed, 70 B / 75 KB file                     | 0.0027 / 0.035 ms | 0.0005 / 0.126 ms |
 
 The improved hash has no collisions in any test and matches the reference avalanche values. It is faster on inputs up to about 4 KB and slower on larger ones, because the original hash only uses the first 128 bytes directly, while the improved one reads every byte.
 
 ![Avalanche Comparison](Experiment/exp4/out/avalanche_compare.png)
 
 ![Speed Comparison](Experiment/exp4/out/bench_compare.png)
+
+### Comparison with SHA-256
+
+[`Experiment/exp5/compare_sha256.cpp`](Experiment/exp5/compare_sha256.cpp) runs the same tests on the improved hash and on SHA-256 from OpenSSL. SHA-256 has no salt argument, so the salt is appended to its input the same way (`input || salt`). The results are written to [`exp5_results.txt`](Experiment/exp5/exp5_results.txt) and the graphs to `Experiment/exp5/out/`. OpenSSL must be installed. To run it:
+
+```bash
+./Experiment/exp5/run_exp5.sh
+```
+
+| Test                                         | Improved          | SHA-256           |
+| -------------------------------------------- | ----------------- | ----------------- |
+| Empty input                                  | hashed            | hashed            |
+| Random collisions (800,000 strings)          | 0                 | 0                 |
+| Structured collisions (all categories)       | 0                 | 0                 |
+| Avalanche, average bits / hex digits changed | 50.00% / 93.76%   | 49.99% / 93.73%   |
+| Speed, 70 B / 75 KB file                     | 0.0005 / 0.123 ms | 0.0004 / 0.029 ms |
+
+In these tests the improved hash gives the same quality of results as SHA-256: no collisions, and avalanche values at the reference level. SHA-256 is faster at every size, about 4 times faster on large files. This does not make the two equally secure: SHA-256 has been studied by cryptographers for years, while the improved hash has only passed these tests and depends on `image.png`.
+
+![Avalanche Comparison with SHA-256](Experiment/exp5/out/avalanche_compare.png)
+
+![Speed Comparison with SHA-256](Experiment/exp5/out/bench_compare.png)
+
+## Conclusions
+
+**Compared versions:** the original hash (`hash.hpp`), the improved hash (`hash_v2.hpp`) and SHA-256, all with the same inputs and seeds.
+
+**Improvements (original -> improved):**
+
+- Every byte of the input is used, so reordering bytes after position 128 no longer collides (`tail_after_128`: 1 -> 720 distinct hashes).
+- A one-byte change no longer moves the lookup to a neighbouring pixel with a similar colour (`single_byte_change`: 1363 -> 0 colliding inputs).
+- Avalanche rose from 45.63% to 50.00% of bits (88.66% -> 93.76% of hex digits), the reference value.
+- Empty input now gets a hash, and inputs up to about 4 KB are hashed faster.
+
+**Regressions:**
+
+- Inputs larger than about 4 KB are slower (75 KB: 0.035 -> 0.126 ms), because every byte is now read.
+- SHA-256 is faster than both at almost every size, about 4 times faster than the improved hash on large files.
+
+**Remaining weaknesses:**
+
+- Both versions depend on `image.png`. A different or edited image gives different hashes, and an image with large flat areas would weaken the hash.
+- The improved hash has no proof or outside analysis behind it. Its mixing step was designed by hand and checked only with these tests.
+
+**What the tests do not prove:**
+
+- Finding no collisions among 800,000 random strings is expected even for a weak hash: for an ideal 256-bit hash the expected number is about 10⁻⁶⁷. The tests can find weaknesses, but they cannot show that none exist.
+- The structured tests only cover some of the possible patterns. An attacker can look for patterns made to fit the hash's own structure.
+- An avalanche average of 50% does not mean the hash resists preimage or collision attacks. The improved hash and SHA-256 give the same test results, but only SHA-256 has years of cryptanalysis behind it.
 
 ## Use of AI
 
