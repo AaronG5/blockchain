@@ -6,9 +6,12 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+
+#ifndef STBI_INCLUDE_STB_IMAGE_H
 #define STBI_ONLY_PNG
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#endif
 
 using namespace std;
 
