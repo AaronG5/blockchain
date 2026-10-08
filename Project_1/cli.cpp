@@ -2,7 +2,13 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+// make build_cli_v2 compiles this file with -DUSE_HASH_V2 to use the improved hash
+#ifdef USE_HASH_V2
+#include "hash_v2.hpp"
+using hash_v2::hashFunction;
+#else
 #include "hash.hpp"
+#endif
 
 using namespace std;
 
