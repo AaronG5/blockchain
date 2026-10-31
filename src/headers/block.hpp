@@ -40,16 +40,7 @@ public:
       return hash::hashFunction(header.serialize()); 
    }
 
-   void setNonce(const std::uint64_t& nonce) { header.nonce = nonce; }
-
-   const Header& getHeader() const { return header; }
-   const std::vector<Transaction>& getTransactions() const { return transactions; }
-      
-private:
-   Header header;
-   std::vector<Transaction> transactions;
-
-   std::string computeTxRoot(const std::vector<Transaction>& transactions) const {
+   static std::string computeTxRoot(const std::vector<Transaction>& transactions) {
       std::string acc = "";
       for(auto& tx : transactions) {
          if(!acc.empty()) acc += "|";
@@ -57,4 +48,15 @@ private:
       }
       return hash::hashFunction(acc);
    }
+
+   void setNonce(std::uint64_t nonce) { header.nonce = nonce; }
+
+   const Header& getHeader() const { return header; }
+   const std::vector<Transaction>& getTransactions() const { return transactions; }
+   
+
+private:
+   Header header;
+   std::vector<Transaction> transactions;
+
 };
