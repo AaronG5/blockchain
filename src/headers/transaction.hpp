@@ -5,39 +5,62 @@
 
 #include "hash.hpp"
 
+struct Input {
+   std::string transactionId;
+   unsigned int index;
+};
+
+struct Output {
+   std::string ownerPK;
+   unsigned int amount;
+};
+
 class Transaction {
 private: 
-   std::string sender; // Change to vector for UTXO
-   std::string receiver; // Change to vector for UTXO
-   std::uint64_t amount; // Add as tuple for sender and receiver vectors for UTXO
-   std::uint64_t sequence; // Add 
+   std::vector<Input> inputs;
+   std::vector<Output> outputs;
+   unsigned int sequence;
    std::string id;
 
 public:
-   Transaction(std::string sender, std::string receiver, std::uint64_t amount, std::uint64_t sequence)
-      : sender(std::move(sender)), receiver(std::move(receiver)), amount(amount), sequence(sequence), 
-        id(computeId()) {}
+   Transaction(std::vector<Input> inputs, std::vector<Output> outputs, unsigned int sequence)
+      : inputs(std::move(inputs)), outputs(std::move(outputs)), sequence(sequence), id(computeId()) {}
 
-   Transaction(std::string sender, std::string receiver, std::uint64_t amount, std::uint64_t sequence, std::string id)
-      : sender(std::move(sender)), receiver(std::move(receiver)), amount(amount), sequence(sequence), 
-        id(std::move(id)) {}
+   Transaction(std::vector<Input> inputs, std::vector<Output> outputs, unsigned int sequence, std::string id)
+      : inputs(std::move(inputs)), outputs(std::move(outputs)), sequence(sequence), id(std::move(id)) {}
 
-
+   // transactionId:index;transactionId:index|ownerPK:amount;ownerPK:amount|sequence
    std::string serialize() const {
-      return sender + "|" + receiver + "|" + std::to_string(amount) + "|" + std::to_string(sequence);
+      std::string acc;
+      for(int i = 0; i < inputs.size(); ++i) {
+         if(i) acc += ";";
+         acc += inputs[i].transactionId + ":" + std::to_string(inputs[i].index);
+      }
+
+      acc += "|";
+
+      for(int i = 0; i < outputs.size(); ++i) {
+         if(i) acc += ";";
+         acc += outputs[i].ownerPK + ":" + std::to_string(outputs[i].amount);
+      }
+
+      return acc + "|" + std::to_string(sequence);
    }
 
    std::string computeId() const {
       return hash::hashFunction(serialize());
    }
 
-   bool hasValidId() const {
-      return id == computeId();
+   unsigned int outputTotal() const {
+      unsigned int sum = 0;
+      for(auto out : outputs) sum += out.amount;
+      return sum;
    }
 
-   const std::string& getSender() const { return sender; }
-   const std::string& getReceiver() const { return receiver; }
-   std::uint64_t getAmount() const { return amount; }
-   std::uint64_t getSequence() const { return sequence; }
+   bool hasValidId() const { return id == computeId(); }
+
+   const std::vector<Input>& getInputs() const { return inputs; }
+   const std::vector<Output>& getOutputs() const { return outputs; }
+   unsigned int getSequence() const { return sequence; }
    const std::string& getId() const { return id; }
 };
