@@ -55,4 +55,11 @@ public:
    std::string getHeadHash() const {
       return chain.empty() ? std::string(64, '0') : chain.back().hash();
    }
+
+   int size() const { return chain.size(); }
+   const std::vector<Block>& getChain() const { return chain; }
+   const State& getInitial() const { return initial; }
+   const State& getConfirmed() const { return confirmed; }
+   int getDifficulty() const { return difficulty; }
+   int getVersion() const { return version; }
 };
