@@ -12,11 +12,11 @@ public:
    User(std::string username, std::string publicKey) 
       : username(username), publicKey(publicKey) {}
 
-   std::string getUserName() {
+   const std::string& getUserName() const {
       return username;
    }
    
-   std::string getPublicKey() {
+   const std::string& getPublicKey() const {
       return publicKey;
    }
 
