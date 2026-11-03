@@ -42,6 +42,16 @@ public:
    explicit Blockchain(State initialState, unsigned int difficulty = 3, unsigned int version = 1)
       : initial(std::move(initialState)), confirmed(initial), difficulty(difficulty), version(version) {}
 
+   bool addBlock(const Block& block, std::string& reason) {
+      State temp = confirmed;
+      if(!verifyBlock(block, temp, reason)) return false;
+
+      confirmed = std::move(temp);
+      for(const Transaction& tx : block.getTransactions()) includedIds.insert(tx.getId());
+      chain.push_back(block);
+      return true;
+   }
+
    std::string getHeadHash() const {
       return chain.empty() ? std::string(64, '0') : chain.back().hash();
    }
