@@ -71,4 +71,10 @@ public:
       }
       return unspentOutputs;
    }
+
+   std::uint64_t total() const {
+      std::uint64_t sum = 0;
+      for(const auto& [ref, out] : unspent) sum += out.amount;
+      return sum;
+   }
 };
