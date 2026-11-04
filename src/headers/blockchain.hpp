@@ -3,11 +3,12 @@
 #include <vector>
 #include <unordered_set>
 #include <string>
+#include <cstddef>
 
 #include "block.hpp"
 #include "state.hpp"
 
-constexpr int MAX_TRANSACTIONS_PER_BLOCK = 100;
+constexpr size_t MAX_TRANSACTIONS_PER_BLOCK = 100;
 
 class Blockchain {
 private:
@@ -34,6 +35,7 @@ private:
          if(!tx.hasValidId()) { reason = "invalid id " + tx.getId(); return false; }
          if(includedIds.count(tx.getId())) { reason = "already in chain " + tx.getId(); return false; }
          if(!seen.insert(tx.getId()).second) { reason = "duplicate in block " + tx.getId(); return false; }
+         if(!state.apply(tx, reason)) return false;
       }
       return true;
    }
