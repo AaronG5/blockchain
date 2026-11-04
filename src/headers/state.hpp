@@ -17,11 +17,7 @@ private:
    }
 
 public:
-   // State() {}
-
-   void fund(const Transaction& tx) {
-      addOutputs(tx);
-   }
+   explicit State(const Transaction& funding) { addOutputs(funding); }
 
    bool canApply(const Transaction& tx, std::string& reason) const {
       std::uint64_t inputTotal = 0;
