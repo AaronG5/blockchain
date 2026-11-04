@@ -61,4 +61,14 @@ public:
       addOutputs(tx);
       return true;
    }
+
+   std::vector<std::pair<Input, Output>> getUnspentOutputs(const std::string& ownerPK) const {
+      std::vector<std::pair<Input, Output>> unspentOutputs;
+      for(const auto& entry : unspent) {
+         if(entry.second.ownerPK == ownerPK) {
+            unspentOutputs.push_back(entry);
+         }
+      }
+      return unspentOutputs;
+   }
 };
