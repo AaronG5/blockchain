@@ -8,6 +8,13 @@
 struct Input {
    std::string transactionId;
    unsigned int index;
+
+   bool operator< (const Input& inp) const {
+      return std::tie(transactionId, index) < std::tie(inp.transactionId, inp.index);
+   }
+   bool operator== (const Input& inp) const {
+      return transactionId == inp.transactionId && index == inp.index;
+   }
 };
 
 struct Output {
@@ -51,8 +58,8 @@ public:
       return hash::hashFunction(serialize());
    }
 
-   unsigned int outputTotal() const {
-      unsigned int sum = 0;
+   std::uint64_t outputTotal() const {
+      std::uint64_t sum = 0;
       for(auto out : outputs) sum += out.amount;
       return sum;
    }
