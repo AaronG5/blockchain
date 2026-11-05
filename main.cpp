@@ -86,9 +86,29 @@ void removeFromPool(std::vector<Transaction>& pool, const std::vector<Transactio
    }), pool.end());
 }
 
-void printBlock(std::size_t height, const Block& block, const MiningResult& result) {}
+void printBlock(std::size_t height, const Block& block, const MiningResult& result) {
+   const Block::Header& header = block.getHeader();
 
-bool mineAndAdd(Blockchain& chain, const std::vector<Transaction>& transactions, std::string& reason) {}
+   std::cout << "Block " << height << "\n"
+             << "   transactions: " << block.getTransactions().size() << "\n"
+             << "   prev_hash:    " << header.prevHash << "\n"
+             << "   tx_root:      " << header.txRoot << "\n"
+             << "   hash:         " << block.hash() << "\n"
+             << "   difficulty:   " << header.difficulty << "\n"
+             << "   nonce:        " << header.nonce << "\n"
+             << "   attempts:     " << result.attempts << "\n"
+             << "   mining time:  " << std::fixed << std::setprecision(6) << result.timeSec << " s\n\n";
+}
+
+bool mineAndAdd(Blockchain& chain, const std::vector<Transaction>& transactions, std::string& reason) {
+   Block block = chain.createBlock(transactions);
+   const MiningResult result = mine(block);
+
+   if(!chain.addBlock(block, reason)) return false;
+
+   printBlock(chain.size() - 1, block, result);
+   return true;
+}
 
 int run(const Config& config) {
    const auto start = std::chrono::steady_clock::now();
