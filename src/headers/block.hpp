@@ -27,7 +27,8 @@ public:
 
    Block(std::string prevHash, std::int64_t timestamp, std::uint32_t version, 
          std::vector<Transaction> transactions, std::uint32_t difficulty) 
-   : transactions(std::move(transactions)) {
+      : transactions(std::move(transactions)) 
+   {
       header.prevHash = std::move(prevHash);
       header.timestamp = timestamp;
       header.version = version;
@@ -35,6 +36,9 @@ public:
       header.difficulty = difficulty;
       header.nonce = 0;
    }
+
+   Block(Header header, std::vector<Transaction> transactions) 
+      : header(std::move(header)), transactions(std::move(transactions)) {}
       
    std::string hash() const { 
       return hash::hashFunction(header.serialize()); 
@@ -49,14 +53,17 @@ public:
       return hash::hashFunction(acc);
    }
 
+   bool hasValidPow() const {
+      const std::string h = hash();
+      return h.compare(0, header.difficulty, std::string(header.difficulty, '0')) == 0;
+   }
+
    void setNonce(std::uint64_t nonce) { header.nonce = nonce; }
 
    const Header& getHeader() const { return header; }
    const std::vector<Transaction>& getTransactions() const { return transactions; }
-   
 
 private:
    Header header;
    std::vector<Transaction> transactions;
-
 };
