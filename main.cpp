@@ -77,7 +77,14 @@ std::vector<Transaction> filterPool(const std::vector<Transaction>& generated, c
    return pool;
 }
 
-void removeFromPool(std::vector<Transaction>& pool, const std::vector<Transaction>& included) {}
+void removeFromPool(std::vector<Transaction>& pool, const std::vector<Transaction>& included) {
+   std::unordered_set<std::string> includedIds;
+   for(const Transaction& tx : included) includedIds.insert(tx.getId());
+
+   pool.erase(std::remove_if(pool.begin(), pool.end(), [&includedIds](const Transaction& tx) {
+      return includedIds.count(tx.getId()) > 0;
+   }), pool.end());
+}
 
 void printBlock(std::size_t height, const Block& block, const MiningResult& result) {}
 
