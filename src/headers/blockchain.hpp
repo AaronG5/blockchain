@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_set>
 #include <string>
-#include <cstddef>
+#include <ctime>
 
 #include "block.hpp"
 #include "state.hpp"
@@ -43,6 +43,10 @@ private:
 public:
    explicit Blockchain(State initialState, unsigned int difficulty = 3, unsigned int version = 1)
       : initial(std::move(initialState)), confirmed(initial), difficulty(difficulty), version(version) {}
+
+   Block createBlock(const std::vector<Transaction>& transactions) const {
+      return Block(getHeadHash(), std::time(nullptr), version, transactions, difficulty);
+   }
 
    bool addBlock(const Block& block, std::string& reason) {
       State temp = confirmed;
