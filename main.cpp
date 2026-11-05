@@ -42,9 +42,40 @@ Config readConfig(int argc, char* argv[]) {
    return config;
 }
 
-std::string findPermanentProblem(const Transaction& tx, const std::unordered_set<std::string>& knownKeys) {}
+std::string findPermanentProblem(const Transaction& tx, const std::unordered_set<std::string>& knownKeys) {
+   if(!tx.hasValidId()) return "invalid id";
+   if(tx.getInputs().empty()) return "missing inputs";
+   if(tx.getOutputs().empty()) return "missing outputs";
 
-std::vector<Transaction> filterPool(const std::vector<Transaction>& generated, const std::vector<User>& users, std::vector<Rejected>& rejected) {}
+   for(const Output& out : tx.getOutputs()) {
+      if(out.amount == 0) return "zero amount output";
+      if(knownKeys.count(out.ownerPK) == 0) return "unknown receiver";
+   }
+   return "";
+}
+
+std::vector<Transaction> filterPool(const std::vector<Transaction>& generated, const std::vector<User>& users, std::vector<Rejected>& rejected) {
+   std::unordered_set<std::string> knownKeys;
+   for(const User& user : users) knownKeys.insert(user.getPublicKey());
+
+   std::vector<Transaction> pool;
+   pool.reserve(generated.size());
+
+   std::unordered_set<std::string> poolIds;
+   for(const Transaction& tx : generated) {
+      std::string problem = findPermanentProblem(tx, knownKeys);
+      if(problem.empty() && poolIds.count(tx.getId())) problem = "id already in pool";
+
+      if(problem.empty()) {
+         poolIds.insert(tx.getId());
+         pool.push_back(tx);
+      }
+      else {
+         rejected.push_back({tx, problem});
+      }
+   }
+   return pool;
+}
 
 void removeFromPool(std::vector<Transaction>& pool, const std::vector<Transaction>& included) {}
 
