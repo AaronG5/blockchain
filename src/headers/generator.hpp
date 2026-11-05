@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <fstream>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -68,19 +67,6 @@ inline Transaction generateFunding(const std::vector<User>& users, Random& rng) 
       outputs.push_back({user.getPublicKey(), static_cast<unsigned int>(amount)});
    }
    return Transaction({}, std::move(outputs), 0);
-}
-
-inline void saveInitialBalances(const std::string& path, const std::vector<User>& users, const Transaction& funding) {
-   std::ofstream file(path);
-   if(!file) {
-      throw std::runtime_error("Could not open " + path);
-   }
-
-   file << "username,public_key,amount\n";
-   const std::vector<Output>& outputs = funding.getOutputs();
-   for(std::size_t i = 0; i < users.size(); ++i) {
-      file << users[i].getUserName() << "," << outputs[i].ownerPK << "," << outputs[i].amount << "\n";
-   }
 }
 
 // Valid when applied in the returned order. `state` is a private copy that follows the payments, so

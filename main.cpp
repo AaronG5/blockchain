@@ -15,6 +15,7 @@
 #include "src/headers/helpers.hpp"
 
 const std::string INITIAL_BALANCES_PATH = "initial_balances.csv";
+const std::string FINAL_BALANCES_PATH = "final_balances.csv";
 
 struct Config {
    std::uint64_t seed = 123;
@@ -117,7 +118,7 @@ int run(const Config& config) {
    const std::vector<User> users = generateUsers(config.users, rng);
    const Transaction funding = generateFunding(users, rng);
    const State initial(funding);
-   saveInitialBalances(INITIAL_BALANCES_PATH, users, funding);
+   saveBalances(INITIAL_BALANCES_PATH, users, initial);
 
    std::vector<Transaction> generated = generateTransactions(users, initial, config.transactions, rng);
    addBadTransactions(generated, config.badPerKind, rng);
@@ -143,6 +144,8 @@ int run(const Config& config) {
       std::cout << "Mined block was not accepted: " << reason << "\n\n";
    }
 
+   saveBalances(FINAL_BALANCES_PATH, users, chain.getConfirmed());
+
    std::size_t included = 0;
    for(const Block& block : chain.getChain()) included += block.getTransactions().size();
 
@@ -167,7 +170,8 @@ int run(const Config& config) {
              << "   funds match:           " << (fundsMatch ? "yes" : "NO") << "\n"
              << "   counts add up:         " << (countsMatch ? "yes" : "NO") << "\n"
              << "   total time:            " << std::fixed << std::setprecision(3) << totalSeconds << " s\n"
-             << "   initial balances:      " << INITIAL_BALANCES_PATH << "\n";
+             << "   initial balances:      " << INITIAL_BALANCES_PATH << "\n"
+             << "   final balances:        " << FINAL_BALANCES_PATH << "\n";
 
    if(!rejected.empty()) {
       std::cout << "\nRejected transactions\n";

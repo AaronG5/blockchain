@@ -1,4 +1,6 @@
+#include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 #include "../headers/helpers.hpp"
 #include "../headers/blockchain.hpp"
@@ -31,4 +33,16 @@ std::vector<Transaction> selectTransactions(std::vector<Transaction>& pool, cons
    }
 
    return selected;
+}
+
+void saveBalances(const std::string& path, const std::vector<User>& users, const State& state) {
+   std::ofstream file(path);
+   if(!file) {
+      throw std::runtime_error("Could not open " + path);
+   }
+
+   file << "username,public_key,amount\n";
+   for(const User& user : users) {
+      file << user.getUserName() << "," << user.getPublicKey() << "," << state.balanceOf(user.getPublicKey()) << "\n";
+   }
 }
