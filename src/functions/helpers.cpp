@@ -1,8 +1,7 @@
-#include "helpers.hpp"
-
 #include <iostream>
 
-#include "blockchain.hpp"
+#include "../headers/helpers.hpp"
+#include "../headers/blockchain.hpp"
 
 MiningResult mine(Block& block) {
    auto start = std::chrono::steady_clock::now();
@@ -25,12 +24,10 @@ std::vector<Transaction> selectTransactions(std::vector<Transaction>& pool, cons
    State temp = confirmed;
    rng.shuffle(pool);
 
-   for(int i = 0; i < MAX_TRANSACTIONS_PER_BLOCK; ++i) {
-      const auto& tx = pool[i];
-      if(temp.apply(tx, reason)) {
-         selected.push_back(tx);
-      }
-      else { std::cout << reason << std::endl; }
+   for(const Transaction& tx : pool) {
+      if(selected.size() == MAX_TRANSACTIONS_PER_BLOCK) break;
+      if(temp.apply(tx, reason)) selected.push_back(tx);
+      // else { std::cout << reason << std::endl; }
    }
 
    return selected;
