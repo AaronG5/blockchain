@@ -70,7 +70,7 @@ bool mineGenesis(Blockchain& chain, std::string& reason) {
    if(!chain.addBlock(genesis, reason)) return false;
 
    printBlock(0, genesis, result.attempts, result.timeSec);
-   std::cout << "\n";
+   std::cout << std::endl;
    return true;
 }
 
@@ -117,7 +117,7 @@ int run(const Config& config) {
 
       printBlock(chain.size() - 1, winner.block, winner.attempts, winner.timeSec);
       printCandidates(candidates, race);
-      std::cout << "   left in pool: " << pool.size() << "\n\n";
+      std::cout << "   left in pool: " << pool.size() << "\n" << std::endl;
    }
 
    if(!chainAccepted) {
