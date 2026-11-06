@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <utility>
+#include <stdexcept>
 
 #include "transaction.hpp"
 #include "hash.hpp"
@@ -44,13 +45,40 @@ public:
       return hash::hashFunction(header.serialize()); 
    }
 
-   static std::string computeTxRoot(const std::vector<Transaction>& transactions) {
-      std::string acc = "";
-      for(auto& tx : transactions) {
-         if(!acc.empty()) acc += "|";
-         acc += tx.getId(); // Serialize for merkle tree
+   static std::string computeTxRoot(const std::vector<std::string>& txIds) {
+      if(txIds.empty()) return hash::hashFunction("");
+      if(txIds.size() == 1) return txIds.front();
+      std::vector<std::string> hashes;
+      for(int i = 0; i < txIds.size(); i += 2) {
+         std::string node1 = hexToBytes(txIds[i]);
+         std::string node2 = hexToBytes((i + 1 < txIds.size()) ? txIds[i + 1] : txIds[i]);
+         hashes.push_back(hash::hashFunction(node1 + node2));
       }
-      return hash::hashFunction(acc);
+
+      return computeTxRoot(hashes);
+   }
+
+   static std::string hexToBytes(const std::string& hexStr) {
+      if(hexStr.size() % 2 == 1) throw std::invalid_argument("hex input size can't be odd when decoding to bytes");
+      std::string byteStr;
+      for(int i = 0; i < hexStr.size(); i += 2) {
+         char a = hexCharToByte(hexStr[i]);
+         char b = hexCharToByte(hexStr[i+1]);
+         byteStr += a * 16 + b;
+      }
+      return byteStr;
+   }
+
+   static char hexCharToByte(char c) {
+      if(c >= '0' && c <= '9') return c - '0';
+      if(c >= 'a' && c <= 'f') return c - 'a' + 10;
+      throw std::invalid_argument("char isn't a hex value");
+   }
+
+   static std::string computeTxRoot(const std::vector<Transaction>& transactions) {
+      std::vector<std::string> txIds;
+      for(const auto& tx : transactions) txIds.push_back(tx.getId());
+      return computeTxRoot(txIds);
    }
 
    bool hasValidPow() const {
