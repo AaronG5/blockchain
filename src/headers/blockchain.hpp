@@ -47,7 +47,7 @@ private:
    }
 
 public:
-   Blockchain(State initialState, std::unordered_set<std::string> knownKeys, unsigned int difficulty = DIFFICULTY, unsigned int version = 1)
+   Blockchain(State initialState, std::unordered_set<std::string> knownKeys, unsigned int difficulty = DIFFICULTY, unsigned int version = 2)
       : initial(std::move(initialState)), confirmed(initial), knownKeys(std::move(knownKeys)), difficulty(difficulty), version(version) {}
 
    Block createBlock(const std::vector<Transaction>& transactions) const {
