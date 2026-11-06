@@ -113,10 +113,11 @@ int run(const Config& config) {
       chainAccepted = chain.addBlock(winner.block, reason);
       if(!chainAccepted) break;
 
+      removeFromPool(pool, winner.block.getTransactions());
+
       printBlock(chain.size() - 1, winner.block, winner.attempts, winner.timeSec);
       printCandidates(candidates, race);
-      std::cout << "\n";
-      removeFromPool(pool, winner.block.getTransactions());
+      std::cout << "   left in pool: " << pool.size() << "\n\n";
    }
 
    if(!chainAccepted) {
