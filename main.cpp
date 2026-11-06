@@ -1,13 +1,15 @@
-#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "src/headers/blockchain.hpp"
@@ -16,78 +18,48 @@
 
 const std::string INITIAL_BALANCES_PATH = "initial_balances.csv";
 const std::string FINAL_BALANCES_PATH = "final_balances.csv";
+const std::string BENCHMARK_PATH = "benchmark.csv";
+constexpr int BENCHMARK_RUNS = 5;
 
 struct Config {
    std::uint64_t seed = 123;
    std::size_t users = 1000;
    std::size_t transactions = 10000;
    std::size_t badPerKind = 5;
+   bool parallel = false;
+   bool benchmark = false;
 };
 
-struct Rejected {
-   Transaction tx;
-   std::string reason;
+struct RunStats {
+   int exitCode;
+   std::size_t blocks;
+   std::uint64_t attempts;
+   double miningSec;
+   double totalSec;
 };
 
-// Usage: blockchain [seed] [users] [transactions] [bad transactions per kind]
+// Usage: blockchain [seed] [users] [transactions] [bad transactions per kind] [--parallel] [--benchmark]
 Config readConfig(int argc, char* argv[]) {
-   if(argc > 5) {
-      throw std::invalid_argument("Too many arguments");
+   Config config;
+   std::vector<std::string> numbers;
+   for(int i = 1; i < argc; ++i) {
+      const std::string arg = argv[i];
+      if(arg == "--parallel") config.parallel = true;
+      else if(arg == "--benchmark") config.benchmark = true;
+      else numbers.push_back(arg);
    }
 
-   Config config;
-   if(argc > 1) config.seed = std::stoull(argv[1]);
-   if(argc > 2) config.users = std::stoull(argv[2]);
-   if(argc > 3) config.transactions = std::stoull(argv[3]);
-   if(argc > 4) config.badPerKind = std::stoull(argv[4]);
+   if(numbers.size() > 4) {
+      throw std::invalid_argument("Too many arguments");
+   }
+   if(numbers.size() > 0) config.seed = std::stoull(numbers[0]);
+   if(numbers.size() > 1) config.users = std::stoull(numbers[1]);
+   if(numbers.size() > 2) config.transactions = std::stoull(numbers[2]);
+   if(numbers.size() > 3) config.badPerKind = std::stoull(numbers[3]);
    return config;
 }
 
-std::string findPermanentProblem(const Transaction& tx, const std::unordered_set<std::string>& knownKeys) {
-   if(!tx.hasValidId()) return "invalid id";
-   if(tx.getInputs().empty()) return "missing inputs";
-   if(tx.getOutputs().empty()) return "missing outputs";
-
-   for(const Output& out : tx.getOutputs()) {
-      if(out.amount == 0) return "zero amount output";
-      if(knownKeys.count(out.ownerPK) == 0) return "unknown receiver";
-   }
-   return "";
-}
-
-std::vector<Transaction> filterPool(const std::vector<Transaction>& generated, const std::vector<User>& users, std::vector<Rejected>& rejected) {
-   std::unordered_set<std::string> knownKeys;
-   for(const User& user : users) knownKeys.insert(user.getPublicKey());
-
-   std::vector<Transaction> pool;
-   pool.reserve(generated.size());
-
-   std::unordered_set<std::string> poolIds;
-   for(const Transaction& tx : generated) {
-      std::string problem = findPermanentProblem(tx, knownKeys);
-      if(problem.empty() && poolIds.count(tx.getId())) problem = "id already in pool";
-
-      if(problem.empty()) {
-         poolIds.insert(tx.getId());
-         pool.push_back(tx);
-      }
-      else {
-         rejected.push_back({tx, problem});
-      }
-   }
-   return pool;
-}
-
-void removeFromPool(std::vector<Transaction>& pool, const std::vector<Transaction>& included) {
-   std::unordered_set<std::string> includedIds;
-   for(const Transaction& tx : included) includedIds.insert(tx.getId());
-
-   pool.erase(std::remove_if(pool.begin(), pool.end(), [&includedIds](const Transaction& tx) {
-      return includedIds.count(tx.getId()) > 0;
-   }), pool.end());
-}
-
-void printBlock(std::size_t height, const Block& block, const MiningResult& result) {
+void printBlock(std::size_t height, const Block& block, std::uint64_t attempts, double timeSec) {
    const Block::Header& header = block.getHeader();
 
    std::cout << "Block " << height << "\n"
@@ -97,21 +69,34 @@ void printBlock(std::size_t height, const Block& block, const MiningResult& resu
              << "   hash:         " << block.hash() << "\n"
              << "   difficulty:   " << header.difficulty << "\n"
              << "   nonce:        " << header.nonce << "\n"
-             << "   attempts:     " << result.attempts << "\n"
-             << "   mining time:  " << std::fixed << std::setprecision(6) << result.timeSec << " s\n\n";
+             << "   attempts:     " << attempts << "\n"
+             << "   mining time:  " << std::fixed << std::setprecision(6) << timeSec << " s\n";
 }
 
-bool mineAndAdd(Blockchain& chain, const std::vector<Transaction>& transactions, std::string& reason) {
-   Block block = chain.createBlock(transactions);
-   const MiningResult result = mine(block);
+void printCandidates(const std::vector<Candidate>& candidates, const RaceResult& race) {
+   if(race.rounds > 0) std::cout << "   rounds:       " << race.rounds << "\n";
+   std::cout << "   candidates:\n";
+   for(std::size_t i = 0; i < candidates.size(); ++i) {
+      const Candidate& candidate = candidates[i];
+      std::cout << "      #" << i + 1 << ": "
+                << std::setw(3) << candidate.block.getTransactions().size() << " txs, "
+                << std::setw(6) << candidate.attempts << " attempts, "
+                << std::fixed << std::setprecision(6) << candidate.timeSec << " s"
+                << (static_cast<int>(i) == race.winner ? "  <- winner" : "") << "\n";
+   }
+}
 
-   if(!chain.addBlock(block, reason)) return false;
+bool mineGenesis(Blockchain& chain, std::string& reason) {
+   Block genesis = chain.createBlock({});
+   const MiningResult result = mine(genesis);
+   if(!chain.addBlock(genesis, reason)) return false;
 
-   printBlock(chain.size() - 1, block, result);
+   printBlock(0, genesis, result.attempts, result.timeSec);
+   std::cout << std::endl;
    return true;
 }
 
-int run(const Config& config) {
+RunStats run(const Config& config) {
    const auto start = std::chrono::steady_clock::now();
 
    Random rng(config.seed);
@@ -123,25 +108,49 @@ int run(const Config& config) {
    std::vector<Transaction> generated = generateTransactions(users, initial, config.transactions, rng);
    addBadTransactions(generated, config.badPerKind, rng);
 
+   std::unordered_set<std::string> knownKeys;
+   for(const User& user : users) knownKeys.insert(user.getPublicKey());
+   Blockchain chain(initial, std::move(knownKeys));
+
    std::vector<Rejected> rejected;
-   std::vector<Transaction> pool = filterPool(generated, users, rejected);
+   std::vector<Transaction> pool = filterPool(generated, chain, rejected);
 
-   Blockchain chain(initial);
    std::string reason;
-
-   // Genesis block
-   bool chainAccepted = mineAndAdd(chain, {}, reason);
+   bool chainAccepted = mineGenesis(chain, reason);
+   bool limitReached = false;
+   std::uint64_t totalAttempts = 0;
+   double miningSeconds = 0;
 
    while(chainAccepted) {
-      const std::vector<Transaction> selected = selectTransactions(pool, chain.getConfirmed(), rng);
-      if(selected.empty()) break;
+      std::vector<Candidate> candidates = buildCandidates(pool, chain, rng, CANDIDATES_PER_BLOCK);
+      if(candidates.empty()) break;
 
-      chainAccepted = mineAndAdd(chain, selected, reason);
-      if(chainAccepted) removeFromPool(pool, selected);
+      const RaceResult race = config.parallel
+         ? mineCandidatesParallel(candidates, MAX_ATTEMPTS_PER_BLOCK)
+         : mineCandidates(candidates, FIRST_ROUND_BUDGET, MAX_ATTEMPTS_PER_BLOCK);
+      totalAttempts += race.totalAttempts;
+      miningSeconds += race.timeSec;
+      if(race.winner < 0) {
+         limitReached = true;
+         break;
+      }
+
+      const Candidate& winner = candidates[race.winner];
+      chainAccepted = chain.addBlock(winner.block, reason);
+      if(!chainAccepted) break;
+
+      removeFromPool(pool, winner.block.getTransactions());
+
+      printBlock(chain.size() - 1, winner.block, winner.attempts, winner.timeSec);
+      printCandidates(candidates, race);
+      std::cout << "   left in pool: " << pool.size() << "\n" << std::endl;
    }
 
    if(!chainAccepted) {
       std::cout << "Mined block was not accepted: " << reason << "\n\n";
+   }
+   if(limitReached) {
+      std::cout << "Mining stopped: no candidate found a nonce within " << MAX_ATTEMPTS_PER_BLOCK << " attempts\n\n";
    }
 
    saveBalances(FINAL_BALANCES_PATH, users, chain.getConfirmed());
@@ -167,8 +176,14 @@ int run(const Config& config) {
              << "   remaining in pool:     " << pool.size() << "\n"
              << "   initial funds:         " << initialFunds << "\n"
              << "   final funds:           " << finalFunds << "\n"
-             << "   funds match:           " << (fundsMatch ? "yes" : "NO") << "\n"
-             << "   counts add up:         " << (countsMatch ? "yes" : "NO") << "\n"
+             << "   funds match:           " << (fundsMatch ? "YES" : "NO") << "\n"
+             << "   counts add up:         " << (countsMatch ? "YES" : "NO") << "\n"
+             << "   candidates per block:  " << CANDIDATES_PER_BLOCK << "\n"
+             << "   first round budget:    " << (config.parallel ? std::string("none, threads mine without rounds")
+                                                  : std::to_string(FIRST_ROUND_BUDGET) + " attempts per candidate, doubled each round") << "\n"
+             << "   mining mode:           " << (config.parallel ? "parallel (one thread per candidate)" : "sequential") << "\n"
+             << "   attempts (candidates): " << totalAttempts << "\n"
+             << "   candidate mining time: " << std::fixed << std::setprecision(3) << miningSeconds << " s\n"
              << "   total time:            " << std::fixed << std::setprecision(3) << totalSeconds << " s\n"
              << "   initial balances:      " << INITIAL_BALANCES_PATH << "\n"
              << "   final balances:        " << FINAL_BALANCES_PATH << "\n";
@@ -189,16 +204,77 @@ int run(const Config& config) {
       }
    }
 
-   return chainAccepted && fundsMatch && countsMatch ? 0 : 1;
+   const int exitCode = chainAccepted && !limitReached && fundsMatch && countsMatch ? 0 : 1;
+   return {exitCode, static_cast<std::size_t>(chain.size()), totalAttempts, miningSeconds, totalSeconds};
+}
+
+// Mean and sample standard deviation
+std::pair<double, double> meanAndSpread(const std::vector<double>& values) {
+   double mean = 0;
+   for(double value : values) mean += value;
+   mean /= values.size();
+
+   double squares = 0;
+   for(double value : values) squares += (value - mean) * (value - mean);
+   return {mean, values.size() > 1 ? std::sqrt(squares / (values.size() - 1)) : 0.0};
+}
+
+// Runs the same config BENCHMARK_RUNS times sequentially, then in parallel, and writes every run plus the
+// mean and standard deviation to BENCHMARK_PATH. The normal block output is hidden during the runs
+int benchmark(Config config) {
+   std::ofstream file(BENCHMARK_PATH);
+   if(!file) {
+      throw std::runtime_error("Could not open " + BENCHMARK_PATH);
+   }
+   file << std::fixed << std::setprecision(6) << "mode,run,blocks,attempts,mining_time_s,total_time_s\n";
+
+   bool allOk = true;
+   double meanMining[2] = {0, 0};
+
+   for(bool parallel : {false, true}) {
+      config.parallel = parallel;
+      const std::string mode = parallel ? "parallel" : "sequential";
+      std::vector<double> columns[4];   // blocks, attempts, mining time, total time
+
+      for(int i = 1; i <= BENCHMARK_RUNS; ++i) {
+         std::cout.setstate(std::ios::badbit);   // while set, everything written to std::cout is dropped
+         const RunStats stats = run(config);
+         std::cout.clear();
+
+         allOk = allOk && stats.exitCode == 0;
+         const double values[4] = {double(stats.blocks), double(stats.attempts), stats.miningSec, stats.totalSec};
+         file << mode << "," << i << "," << stats.blocks << "," << stats.attempts << ","
+              << stats.miningSec << "," << stats.totalSec << "\n";
+         for(int c = 0; c < 4; ++c) columns[c].push_back(values[c]);
+
+         std::cout << std::fixed << std::setprecision(3) << mode << " run " << i << ": mining " << stats.miningSec
+                   << " s, total " << stats.totalSec << " s" << std::endl;
+      }
+
+      file << mode << ",mean";
+      for(const auto& column : columns) file << "," << meanAndSpread(column).first;
+      file << "\n" << mode << ",stddev";
+      for(const auto& column : columns) file << "," << meanAndSpread(column).second;
+      file << "\n";
+
+      const auto [mean, spread] = meanAndSpread(columns[2]);
+      meanMining[parallel] = mean;
+      std::cout << mode << " mining time: " << mean << " s on average, std dev " << spread << " s\n\n";
+   }
+
+   std::cout << "parallel speedup (mining): " << std::setprecision(2) << meanMining[0] / meanMining[1] << "x\n"
+             << "results: " << BENCHMARK_PATH << "\n";
+   return allOk ? 0 : 1;
 }
 
 int main(int argc, char* argv[]) {
    try {
-      return run(readConfig(argc, argv));
+      const Config config = readConfig(argc, argv);
+      return config.benchmark ? benchmark(config) : run(config).exitCode;
    }
    catch(const std::exception& e) {
       std::cerr << "Error: " << e.what() << "\n"
-                << "Usage: blockchain [seed] [users] [transactions] [bad transactions per kind]\n";
+                << "Usage: blockchain [seed] [users] [transactions] [bad transactions per kind] [--parallel] [--benchmark]\n";
       return 1;
    }
 }
