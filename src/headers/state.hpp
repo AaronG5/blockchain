@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <limits>
 #include <map>
 #include <set>
 
@@ -7,6 +9,8 @@
 
 class State {
 private:
+   static constexpr std::uint64_t MAX_TOTAL = std::numeric_limits<std::uint64_t>::max();
+
    std::map<Input, Output> unspent;
 
    void addOutputs(const Transaction& tx) {
@@ -36,12 +40,14 @@ public:
          const Output& spent = it->second; // Access old output amount (for spending)
          if(owner.empty()) owner = spent.ownerPK;
          else if(spent.ownerPK != owner) { reason = "inputs have different owners"; return false; }
+         if(spent.amount > MAX_TOTAL - inputTotal) { reason = "input total overflows"; return false; }
          inputTotal += spent.amount;
       }
       bool paysSomeoneElse = false;
       for(const Output& out : tx.getOutputs()) {
          if(out.amount == 0) { reason = "zero amount output"; return false; }
          if(out.ownerPK != owner) paysSomeoneElse = true;
+         if(out.amount > MAX_TOTAL - outputTotal) { reason = "output total overflows"; return false; }
          outputTotal += out.amount;
       }
       if(!paysSomeoneElse) { reason = "owner pays only themselves"; return false; }
@@ -77,4 +83,14 @@ public:
       for(const auto& [ref, out] : unspent) sum += out.amount;
       return sum;
    }
+
+   std::uint64_t balanceOf(const std::string& ownerPK) const {
+      std::uint64_t sum = 0;
+      for(const auto& [ref, out] : unspent) {
+         if(out.ownerPK == ownerPK) sum += out.amount;
+      }
+      return sum;
+   }
+
+   std::size_t size() const { return unspent.size(); }
 };
