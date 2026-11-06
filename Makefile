@@ -1,4 +1,4 @@
-CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -Wno-unused-function -Wno-sign-compare -Isrc/headers
+CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -Wno-unused-function -Wno-sign-compare -Isrc/headers -pthread
 
 TARGET := bin/blockchain
 SOURCES := main.cpp $(wildcard src/functions/*.cpp)

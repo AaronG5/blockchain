@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <vector>
 #include <chrono>
 #include <string>
@@ -26,7 +27,7 @@ MiningResult mine(Block& block);
 
 constexpr std::size_t CANDIDATES_PER_BLOCK = 5;
 constexpr std::uint64_t FIRST_ROUND_BUDGET = 1000;
-constexpr std::uint64_t MAX_ATTEMPTS_PER_BLOCK = 1000000;
+constexpr std::uint64_t MAX_ATTEMPTS_PER_BLOCK = 500000;
 
 struct Candidate {
    Block block;
@@ -38,15 +39,19 @@ struct Candidate {
 
 struct RaceResult {
    int winner = -1;
-   int rounds = 0;
+   int rounds = 0;   // stays 0 in parallel mode, which has no rounds
    std::uint64_t totalAttempts = 0;
+   double timeSec = 0;
 };
 
 std::vector<Candidate> buildCandidates(std::vector<Transaction>& pool, const Blockchain& chain, Random& rng, std::size_t count);
 
-bool mineWithBudget(Candidate& candidate, std::uint64_t budget);
+bool mineWithBudget(Candidate& candidate, std::uint64_t budget, const std::atomic<bool>* stop = nullptr);
 
 RaceResult mineCandidates(std::vector<Candidate>& candidates, std::uint64_t budget, std::uint64_t maxTotalAttempts);
+
+// One thread per candidate, no rounds: mines until one finds a nonce (and stops the others) or its share of the limit runs out
+RaceResult mineCandidatesParallel(std::vector<Candidate>& candidates, std::uint64_t maxTotalAttempts);
 
 std::string findPermanentProblem(const Transaction& tx, const Blockchain& chain);
 

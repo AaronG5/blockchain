@@ -21,19 +21,26 @@ struct Config {
    std::size_t users = 1000;
    std::size_t transactions = 10000;
    std::size_t badPerKind = 5;
+   bool parallel = false;
 };
 
-// Usage: blockchain [seed] [users] [transactions] [bad transactions per kind]
+// Usage: blockchain [seed] [users] [transactions] [bad transactions per kind] [--parallel]
 Config readConfig(int argc, char* argv[]) {
-   if(argc > 5) {
-      throw std::invalid_argument("Too many arguments");
+   Config config;
+   std::vector<std::string> numbers;
+   for(int i = 1; i < argc; ++i) {
+      const std::string arg = argv[i];
+      if(arg == "--parallel") config.parallel = true;
+      else numbers.push_back(arg);
    }
 
-   Config config;
-   if(argc > 1) config.seed = std::stoull(argv[1]);
-   if(argc > 2) config.users = std::stoull(argv[2]);
-   if(argc > 3) config.transactions = std::stoull(argv[3]);
-   if(argc > 4) config.badPerKind = std::stoull(argv[4]);
+   if(numbers.size() > 4) {
+      throw std::invalid_argument("Too many arguments");
+   }
+   if(numbers.size() > 0) config.seed = std::stoull(numbers[0]);
+   if(numbers.size() > 1) config.users = std::stoull(numbers[1]);
+   if(numbers.size() > 2) config.transactions = std::stoull(numbers[2]);
+   if(numbers.size() > 3) config.badPerKind = std::stoull(numbers[3]);
    return config;
 }
 
@@ -52,8 +59,8 @@ void printBlock(std::size_t height, const Block& block, std::uint64_t attempts, 
 }
 
 void printCandidates(const std::vector<Candidate>& candidates, const RaceResult& race) {
-   std::cout << "   rounds:       " << race.rounds << "\n"
-             << "   candidates:\n";
+   if(race.rounds > 0) std::cout << "   rounds:       " << race.rounds << "\n";
+   std::cout << "   candidates:\n";
    for(std::size_t i = 0; i < candidates.size(); ++i) {
       const Candidate& candidate = candidates[i];
       std::cout << "      #" << i + 1 << ": "
@@ -97,13 +104,17 @@ int run(const Config& config) {
    bool chainAccepted = mineGenesis(chain, reason);
    bool limitReached = false;
    std::uint64_t totalAttempts = 0;
+   double miningSeconds = 0;
 
    while(chainAccepted) {
       std::vector<Candidate> candidates = buildCandidates(pool, chain, rng, CANDIDATES_PER_BLOCK);
       if(candidates.empty()) break;
 
-      const RaceResult race = mineCandidates(candidates, FIRST_ROUND_BUDGET, MAX_ATTEMPTS_PER_BLOCK);
+      const RaceResult race = config.parallel
+         ? mineCandidatesParallel(candidates, MAX_ATTEMPTS_PER_BLOCK)
+         : mineCandidates(candidates, FIRST_ROUND_BUDGET, MAX_ATTEMPTS_PER_BLOCK);
       totalAttempts += race.totalAttempts;
+      miningSeconds += race.timeSec;
       if(race.winner < 0) {
          limitReached = true;
          break;
@@ -150,11 +161,14 @@ int run(const Config& config) {
              << "   remaining in pool:     " << pool.size() << "\n"
              << "   initial funds:         " << initialFunds << "\n"
              << "   final funds:           " << finalFunds << "\n"
-             << "   funds match:           " << (fundsMatch ? "yes" : "NO") << "\n"
-             << "   counts add up:         " << (countsMatch ? "yes" : "NO") << "\n"
+             << "   funds match:           " << (fundsMatch ? "YES" : "NO") << "\n"
+             << "   counts add up:         " << (countsMatch ? "YES" : "NO") << "\n"
              << "   candidates per block:  " << CANDIDATES_PER_BLOCK << "\n"
-             << "   first round budget:    " << FIRST_ROUND_BUDGET << " attempts per candidate, doubled each round\n"
+             << "   first round budget:    " << (config.parallel ? std::string("none, threads mine without rounds")
+                                                  : std::to_string(FIRST_ROUND_BUDGET) + " attempts per candidate, doubled each round") << "\n"
+             << "   mining mode:           " << (config.parallel ? "parallel (one thread per candidate)" : "sequential") << "\n"
              << "   attempts (candidates): " << totalAttempts << "\n"
+             << "   candidate mining time: " << std::fixed << std::setprecision(3) << miningSeconds << " s\n"
              << "   total time:            " << std::fixed << std::setprecision(3) << totalSeconds << " s\n"
              << "   initial balances:      " << INITIAL_BALANCES_PATH << "\n"
              << "   final balances:        " << FINAL_BALANCES_PATH << "\n";
@@ -184,7 +198,7 @@ int main(int argc, char* argv[]) {
    }
    catch(const std::exception& e) {
       std::cerr << "Error: " << e.what() << "\n"
-                << "Usage: blockchain [seed] [users] [transactions] [bad transactions per kind]\n";
+                << "Usage: blockchain [seed] [users] [transactions] [bad transactions per kind] [--parallel]\n";
       return 1;
    }
 }

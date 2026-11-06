@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
 #include <unordered_set>
 
 #include "../headers/helpers.hpp"
@@ -32,10 +33,11 @@ std::vector<Candidate> buildCandidates(std::vector<Transaction>& pool, const Blo
    return candidates;
 }
 
-bool mineWithBudget(Candidate& candidate, std::uint64_t budget) {
+bool mineWithBudget(Candidate& candidate, std::uint64_t budget, const std::atomic<bool>* stop) {
    const auto start = std::chrono::steady_clock::now();
 
    for(std::uint64_t i = 0; i < budget && !candidate.solved; ++i) {
+      if(stop && stop->load()) break;
       candidate.block.setNonce(candidate.nextNonce++);
       ++candidate.attempts;
       candidate.solved = candidate.block.hasValidPow();
@@ -47,26 +49,63 @@ bool mineWithBudget(Candidate& candidate, std::uint64_t budget) {
 }
 
 RaceResult mineCandidates(std::vector<Candidate>& candidates, std::uint64_t budget, std::uint64_t maxTotalAttempts) {
+   const auto start = std::chrono::steady_clock::now();
    RaceResult result;
-   if(candidates.empty()) return result;
 
-   while(result.totalAttempts < maxTotalAttempts) {
+   while(!candidates.empty() && result.winner < 0 && result.totalAttempts < maxTotalAttempts) {
       ++result.rounds;
       for(int i = 0; i < candidates.size(); ++i) {
          const std::uint64_t allowed = std::min(budget, maxTotalAttempts - result.totalAttempts);
-         if(allowed == 0) return result;
+         if(allowed == 0) break;
 
          const std::uint64_t before = candidates[i].attempts;
          const bool found = mineWithBudget(candidates[i], allowed);
          result.totalAttempts += candidates[i].attempts - before;
 
          if(found) {
-            result.winner = static_cast<int>(i);
-            return result;
+            result.winner = i;
+            break;
          }
       }
       budget *= 2;
    }
+
+   const auto end = std::chrono::steady_clock::now();
+   result.timeSec = std::chrono::duration<double>(end - start).count();
+   return result;
+}
+
+RaceResult mineCandidatesParallel(std::vector<Candidate>& candidates, std::uint64_t maxTotalAttempts) {
+   const auto start = std::chrono::steady_clock::now();
+   RaceResult result;
+   if(candidates.empty()) return result;
+
+   // No rounds: every thread keeps mining until someone wins or its equal share of the limit runs out
+   const std::uint64_t share = maxTotalAttempts / candidates.size();
+   std::atomic<int> winner{-1};
+   std::atomic<bool> stop{false};
+   std::vector<std::uint64_t> before(candidates.size());
+   std::vector<std::thread> workers;
+
+   for(int i = 0; i < candidates.size(); ++i) {
+      before[i] = candidates[i].attempts;
+      workers.emplace_back([&candidates, &winner, &stop, share, i] {
+         if(!mineWithBudget(candidates[i], share, &stop)) return;
+
+         // Only the first thread to get here becomes the winner, even if two find a nonce at the same time
+         int expected = -1;
+         if(winner.compare_exchange_strong(expected, i)) stop = true;
+      });
+   }
+   for(std::thread& worker : workers) worker.join();
+
+   for(int i = 0; i < candidates.size(); ++i) {
+      result.totalAttempts += candidates[i].attempts - before[i];
+   }
+   result.winner = winner.load();
+
+   const auto end = std::chrono::steady_clock::now();
+   result.timeSec = std::chrono::duration<double>(end - start).count();
    return result;
 }
 
