@@ -8,6 +8,8 @@
 #include "block.hpp"
 #include "state.hpp"
 
+#define DIFFICULTY 3
+
 constexpr size_t MAX_TRANSACTIONS_PER_BLOCK = 100;
 
 class Blockchain {
@@ -45,7 +47,7 @@ private:
    }
 
 public:
-   Blockchain(State initialState, std::unordered_set<std::string> knownKeys, unsigned int difficulty = 3, unsigned int version = 1)
+   Blockchain(State initialState, std::unordered_set<std::string> knownKeys, unsigned int difficulty = DIFFICULTY, unsigned int version = 1)
       : initial(std::move(initialState)), confirmed(initial), knownKeys(std::move(knownKeys)), difficulty(difficulty), version(version) {}
 
    Block createBlock(const std::vector<Transaction>& transactions) const {
