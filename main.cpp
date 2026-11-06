@@ -1,12 +1,15 @@
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "src/headers/blockchain.hpp"
@@ -15,6 +18,8 @@
 
 const std::string INITIAL_BALANCES_PATH = "initial_balances.csv";
 const std::string FINAL_BALANCES_PATH = "final_balances.csv";
+const std::string BENCHMARK_PATH = "benchmark.csv";
+constexpr int BENCHMARK_RUNS = 5;
 
 struct Config {
    std::uint64_t seed = 123;
@@ -22,15 +27,25 @@ struct Config {
    std::size_t transactions = 10000;
    std::size_t badPerKind = 5;
    bool parallel = false;
+   bool benchmark = false;
 };
 
-// Usage: blockchain [seed] [users] [transactions] [bad transactions per kind] [--parallel]
+struct RunStats {
+   int exitCode;
+   std::size_t blocks;
+   std::uint64_t attempts;
+   double miningSec;
+   double totalSec;
+};
+
+// Usage: blockchain [seed] [users] [transactions] [bad transactions per kind] [--parallel] [--benchmark]
 Config readConfig(int argc, char* argv[]) {
    Config config;
    std::vector<std::string> numbers;
    for(int i = 1; i < argc; ++i) {
       const std::string arg = argv[i];
       if(arg == "--parallel") config.parallel = true;
+      else if(arg == "--benchmark") config.benchmark = true;
       else numbers.push_back(arg);
    }
 
@@ -81,7 +96,7 @@ bool mineGenesis(Blockchain& chain, std::string& reason) {
    return true;
 }
 
-int run(const Config& config) {
+RunStats run(const Config& config) {
    const auto start = std::chrono::steady_clock::now();
 
    Random rng(config.seed);
@@ -189,16 +204,77 @@ int run(const Config& config) {
       }
    }
 
-   return chainAccepted && !limitReached && fundsMatch && countsMatch ? 0 : 1;
+   const int exitCode = chainAccepted && !limitReached && fundsMatch && countsMatch ? 0 : 1;
+   return {exitCode, static_cast<std::size_t>(chain.size()), totalAttempts, miningSeconds, totalSeconds};
+}
+
+// Mean and sample standard deviation
+std::pair<double, double> meanAndSpread(const std::vector<double>& values) {
+   double mean = 0;
+   for(double value : values) mean += value;
+   mean /= values.size();
+
+   double squares = 0;
+   for(double value : values) squares += (value - mean) * (value - mean);
+   return {mean, values.size() > 1 ? std::sqrt(squares / (values.size() - 1)) : 0.0};
+}
+
+// Runs the same config BENCHMARK_RUNS times sequentially, then in parallel, and writes every run plus the
+// mean and standard deviation to BENCHMARK_PATH. The normal block output is hidden during the runs
+int benchmark(Config config) {
+   std::ofstream file(BENCHMARK_PATH);
+   if(!file) {
+      throw std::runtime_error("Could not open " + BENCHMARK_PATH);
+   }
+   file << std::fixed << std::setprecision(6) << "mode,run,blocks,attempts,mining_time_s,total_time_s\n";
+
+   bool allOk = true;
+   double meanMining[2] = {0, 0};
+
+   for(bool parallel : {false, true}) {
+      config.parallel = parallel;
+      const std::string mode = parallel ? "parallel" : "sequential";
+      std::vector<double> columns[4];   // blocks, attempts, mining time, total time
+
+      for(int i = 1; i <= BENCHMARK_RUNS; ++i) {
+         std::cout.setstate(std::ios::badbit);   // while set, everything written to std::cout is dropped
+         const RunStats stats = run(config);
+         std::cout.clear();
+
+         allOk = allOk && stats.exitCode == 0;
+         const double values[4] = {double(stats.blocks), double(stats.attempts), stats.miningSec, stats.totalSec};
+         file << mode << "," << i << "," << stats.blocks << "," << stats.attempts << ","
+              << stats.miningSec << "," << stats.totalSec << "\n";
+         for(int c = 0; c < 4; ++c) columns[c].push_back(values[c]);
+
+         std::cout << std::fixed << std::setprecision(3) << mode << " run " << i << ": mining " << stats.miningSec
+                   << " s, total " << stats.totalSec << " s" << std::endl;
+      }
+
+      file << mode << ",mean";
+      for(const auto& column : columns) file << "," << meanAndSpread(column).first;
+      file << "\n" << mode << ",stddev";
+      for(const auto& column : columns) file << "," << meanAndSpread(column).second;
+      file << "\n";
+
+      const auto [mean, spread] = meanAndSpread(columns[2]);
+      meanMining[parallel] = mean;
+      std::cout << mode << " mining time: " << mean << " s on average, std dev " << spread << " s\n\n";
+   }
+
+   std::cout << "parallel speedup (mining): " << std::setprecision(2) << meanMining[0] / meanMining[1] << "x\n"
+             << "results: " << BENCHMARK_PATH << "\n";
+   return allOk ? 0 : 1;
 }
 
 int main(int argc, char* argv[]) {
    try {
-      return run(readConfig(argc, argv));
+      const Config config = readConfig(argc, argv);
+      return config.benchmark ? benchmark(config) : run(config).exitCode;
    }
    catch(const std::exception& e) {
       std::cerr << "Error: " << e.what() << "\n"
-                << "Usage: blockchain [seed] [users] [transactions] [bad transactions per kind] [--parallel]\n";
+                << "Usage: blockchain [seed] [users] [transactions] [bad transactions per kind] [--parallel] [--benchmark]\n";
       return 1;
    }
 }

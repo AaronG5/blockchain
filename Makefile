@@ -32,6 +32,10 @@ bin/obj/%.o: %.cpp
 run: $(TARGET)
 	set -o pipefail; ./$(TARGET) $(ARGS) | tee $(OUTPUT)
 
+# Same ARGS as run, 5 sequential and 5 parallel runs, results in benchmark.csv
+benchmark: $(TARGET)
+	./$(TARGET) $(ARGS) --benchmark
+
 $(TEST_TARGET): $(TEST_OBJECTS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
@@ -43,4 +47,4 @@ clean:
 
 -include $(DEPENDENCIES)
 
-.PHONY: all run test clean
+.PHONY: all run benchmark test clean
