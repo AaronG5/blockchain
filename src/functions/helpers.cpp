@@ -22,6 +22,54 @@ MiningResult mine(Block& block) {
    return {nonce + 1, seconds};
 }
 
+std::vector<Candidate> buildCandidates(std::vector<Transaction>& pool, const Blockchain& chain, Random& rng, std::size_t count) {
+   std::vector<Candidate> candidates;
+   for(std::size_t i = 0; i < count; ++i) {
+      std::vector<Transaction> selected = selectTransactions(pool, chain.getConfirmed(), rng);
+      if(selected.empty()) break;
+      candidates.push_back({chain.createBlock(selected)});
+   }
+   return candidates;
+}
+
+bool mineWithBudget(Candidate& candidate, std::uint64_t budget) {
+   const auto start = std::chrono::steady_clock::now();
+
+   for(std::uint64_t i = 0; i < budget && !candidate.solved; ++i) {
+      candidate.block.setNonce(candidate.nextNonce++);
+      ++candidate.attempts;
+      candidate.solved = candidate.block.hasValidPow();
+   }
+
+   const auto end = std::chrono::steady_clock::now();
+   candidate.timeSec += std::chrono::duration<double>(end - start).count();
+   return candidate.solved;
+}
+
+RaceResult mineCandidates(std::vector<Candidate>& candidates, std::uint64_t budget, std::uint64_t maxTotalAttempts) {
+   RaceResult result;
+   if(candidates.empty()) return result;
+
+   while(result.totalAttempts < maxTotalAttempts) {
+      ++result.rounds;
+      for(int i = 0; i < candidates.size(); ++i) {
+         const std::uint64_t allowed = std::min(budget, maxTotalAttempts - result.totalAttempts);
+         if(allowed == 0) return result;
+
+         const std::uint64_t before = candidates[i].attempts;
+         const bool found = mineWithBudget(candidates[i], allowed);
+         result.totalAttempts += candidates[i].attempts - before;
+
+         if(found) {
+            result.winner = static_cast<int>(i);
+            return result;
+         }
+      }
+      budget *= 2;
+   }
+   return result;
+}
+
 std::string findPermanentProblem(const Transaction& tx, const Blockchain& chain) {
    if(!tx.hasValidId()) return "invalid id";
    if(tx.getInputs().empty()) return "missing inputs";
@@ -74,7 +122,6 @@ std::vector<Transaction> selectTransactions(std::vector<Transaction>& pool, cons
    for(const Transaction& tx : pool) {
       if(selected.size() == MAX_TRANSACTIONS_PER_BLOCK) break;
       if(temp.apply(tx, reason)) selected.push_back(tx);
-      // else { std::cout << reason << std::endl; }
    }
 
    return selected;

@@ -24,15 +24,36 @@ struct Rejected {
 
 MiningResult mine(Block& block);
 
-// Pool entry: problems that no future state can fix. Returns "" when there are none
+constexpr std::size_t CANDIDATES_PER_BLOCK = 5;
+constexpr std::uint64_t FIRST_ROUND_BUDGET = 1000;
+constexpr std::uint64_t MAX_ATTEMPTS_PER_BLOCK = 1000000;
+
+struct Candidate {
+   Block block;
+   std::uint64_t nextNonce = 0;
+   std::uint64_t attempts = 0;
+   double timeSec = 0;
+   bool solved = false;
+};
+
+struct RaceResult {
+   int winner = -1;
+   int rounds = 0;
+   std::uint64_t totalAttempts = 0;
+};
+
+std::vector<Candidate> buildCandidates(std::vector<Transaction>& pool, const Blockchain& chain, Random& rng, std::size_t count);
+
+bool mineWithBudget(Candidate& candidate, std::uint64_t budget);
+
+RaceResult mineCandidates(std::vector<Candidate>& candidates, std::uint64_t budget, std::uint64_t maxTotalAttempts);
+
 std::string findPermanentProblem(const Transaction& tx, const Blockchain& chain);
 
-// Keeps the transactions that pass pool entry, the rest go to `rejected` with a reason
 std::vector<Transaction> filterPool(const std::vector<Transaction>& generated, const Blockchain& chain, std::vector<Rejected>& rejected);
 
 void removeFromPool(std::vector<Transaction>& pool, const std::vector<Transaction>& included);
 
 std::vector<Transaction> selectTransactions(std::vector<Transaction>& pool, const State& confirmed, Random& rng);
 
-// Writes username,public_key,amount for every user, in the order of `users`
 void saveBalances(const std::string& path, const std::vector<User>& users, const State& state);

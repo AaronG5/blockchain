@@ -37,7 +37,7 @@ Config readConfig(int argc, char* argv[]) {
    return config;
 }
 
-void printBlock(std::size_t height, const Block& block, const MiningResult& result) {
+void printBlock(std::size_t height, const Block& block, std::uint64_t attempts, double timeSec) {
    const Block::Header& header = block.getHeader();
 
    std::cout << "Block " << height << "\n"
@@ -47,17 +47,30 @@ void printBlock(std::size_t height, const Block& block, const MiningResult& resu
              << "   hash:         " << block.hash() << "\n"
              << "   difficulty:   " << header.difficulty << "\n"
              << "   nonce:        " << header.nonce << "\n"
-             << "   attempts:     " << result.attempts << "\n"
-             << "   mining time:  " << std::fixed << std::setprecision(6) << result.timeSec << " s\n\n";
+             << "   attempts:     " << attempts << "\n"
+             << "   mining time:  " << std::fixed << std::setprecision(6) << timeSec << " s\n";
 }
 
-bool mineAndAdd(Blockchain& chain, const std::vector<Transaction>& transactions, std::string& reason) {
-   Block block = chain.createBlock(transactions);
-   const MiningResult result = mine(block);
+void printCandidates(const std::vector<Candidate>& candidates, const RaceResult& race) {
+   std::cout << "   rounds:       " << race.rounds << "\n"
+             << "   candidates:\n";
+   for(std::size_t i = 0; i < candidates.size(); ++i) {
+      const Candidate& candidate = candidates[i];
+      std::cout << "      #" << i + 1 << ": "
+                << std::setw(3) << candidate.block.getTransactions().size() << " txs, "
+                << std::setw(6) << candidate.attempts << " attempts, "
+                << std::fixed << std::setprecision(6) << candidate.timeSec << " s"
+                << (static_cast<int>(i) == race.winner ? "  <- winner" : "") << "\n";
+   }
+}
 
-   if(!chain.addBlock(block, reason)) return false;
+bool mineGenesis(Blockchain& chain, std::string& reason) {
+   Block genesis = chain.createBlock({});
+   const MiningResult result = mine(genesis);
+   if(!chain.addBlock(genesis, reason)) return false;
 
-   printBlock(chain.size() - 1, block, result);
+   printBlock(0, genesis, result.attempts, result.timeSec);
+   std::cout << "\n";
    return true;
 }
 
@@ -81,20 +94,36 @@ int run(const Config& config) {
    std::vector<Transaction> pool = filterPool(generated, chain, rejected);
 
    std::string reason;
-
-   // Genesis block
-   bool chainAccepted = mineAndAdd(chain, {}, reason);
+   bool chainAccepted = mineGenesis(chain, reason);
+   bool limitReached = false;
+   std::uint64_t totalAttempts = 0;
 
    while(chainAccepted) {
-      const std::vector<Transaction> selected = selectTransactions(pool, chain.getConfirmed(), rng);
-      if(selected.empty()) break;
+      std::vector<Candidate> candidates = buildCandidates(pool, chain, rng, CANDIDATES_PER_BLOCK);
+      if(candidates.empty()) break;
 
-      chainAccepted = mineAndAdd(chain, selected, reason);
-      if(chainAccepted) removeFromPool(pool, selected);
+      const RaceResult race = mineCandidates(candidates, FIRST_ROUND_BUDGET, MAX_ATTEMPTS_PER_BLOCK);
+      totalAttempts += race.totalAttempts;
+      if(race.winner < 0) {
+         limitReached = true;
+         break;
+      }
+
+      const Candidate& winner = candidates[race.winner];
+      chainAccepted = chain.addBlock(winner.block, reason);
+      if(!chainAccepted) break;
+
+      printBlock(chain.size() - 1, winner.block, winner.attempts, winner.timeSec);
+      printCandidates(candidates, race);
+      std::cout << "\n";
+      removeFromPool(pool, winner.block.getTransactions());
    }
 
    if(!chainAccepted) {
       std::cout << "Mined block was not accepted: " << reason << "\n\n";
+   }
+   if(limitReached) {
+      std::cout << "Mining stopped: no candidate found a nonce within " << MAX_ATTEMPTS_PER_BLOCK << " attempts\n\n";
    }
 
    saveBalances(FINAL_BALANCES_PATH, users, chain.getConfirmed());
@@ -122,6 +151,9 @@ int run(const Config& config) {
              << "   final funds:           " << finalFunds << "\n"
              << "   funds match:           " << (fundsMatch ? "yes" : "NO") << "\n"
              << "   counts add up:         " << (countsMatch ? "yes" : "NO") << "\n"
+             << "   candidates per block:  " << CANDIDATES_PER_BLOCK << "\n"
+             << "   first round budget:    " << FIRST_ROUND_BUDGET << " attempts per candidate, doubled each round\n"
+             << "   attempts (candidates): " << totalAttempts << "\n"
              << "   total time:            " << std::fixed << std::setprecision(3) << totalSeconds << " s\n"
              << "   initial balances:      " << INITIAL_BALANCES_PATH << "\n"
              << "   final balances:        " << FINAL_BALANCES_PATH << "\n";
@@ -142,7 +174,7 @@ int run(const Config& config) {
       }
    }
 
-   return chainAccepted && fundsMatch && countsMatch ? 0 : 1;
+   return chainAccepted && !limitReached && fundsMatch && countsMatch ? 0 : 1;
 }
 
 int main(int argc, char* argv[]) {
