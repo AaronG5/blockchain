@@ -1,5 +1,6 @@
-// Compares the original hash (hash.hpp) with the improved one (hash_v2.hpp) by running the tests of
-// experiments 1-3 on both, with the same inputs and seeds as before.
+// Compares the improved hash (hash_v2.hpp) with SHA-256 (from OpenSSL) by running the tests of
+// experiments 1-3 on both, with the same inputs and seeds as before. SHA-256 has no salt argument,
+// so the salt is appended to the input as raw bytes, the same way hash_v2 does it (input || salt).
 //
 // 1. Correctness (exp1): hash length, determinism and empty input for the files in exp1/gen
 // 2. Speed (exp1): average time of 10 runs for every constitution snippet in exp1/gen_konst
@@ -7,8 +8,8 @@
 // 4. Avalanche (exp2): pairs that differ in exactly one character
 // 5. Brute force (exp3): all four-digit candidates, without and with a public salt
 //
-// Usage (from Project_1, because both hashes read image.png from the working directory):
-//    ./Experiment/exp4/compare [baseDir] [pairs]
+// Usage (from the repository root, because hash_v2 reads image.png from the working directory):
+//    ./Experiment/exp5/compare_sha256 [baseDir] [pairs]
 
 #include <algorithm>
 #include <bitset>
@@ -27,8 +28,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../../hash.hpp"      // must come before hash_v2.hpp, it compiles stb_image
-#include "../../hash_v2.hpp"
+#include <openssl/evp.h>
+#include <openssl/opensslv.h>
+
+#include "../../src/headers/hash_v2.hpp"
 
 namespace fs = std::filesystem;
 
@@ -37,9 +40,27 @@ struct HashImpl {
    std::string (*function)(const std::string&, const std::string&);
 };
 
+// SHA-256 of (input || salt), written as 64 lowercase hex characters
+static std::string sha256Function(const std::string& input, const std::string& saltHex) {
+   const std::string data = input + hash_v2::decodeSalt(saltHex);
+   unsigned char digest[EVP_MAX_MD_SIZE];
+   unsigned int length = 0;
+   if (!EVP_Digest(data.data(), data.size(), digest, &length, EVP_sha256(), nullptr)) {
+      throw std::runtime_error("SHA-256 failed");
+   }
+
+   const char* DIGITS = "0123456789abcdef";
+   std::string hash;
+   for (unsigned int i = 0; i < length; ++i) {
+      hash += DIGITS[digest[i] >> 4];
+      hash += DIGITS[digest[i] & 0xF];
+   }
+   return hash;
+}
+
 static const std::vector<HashImpl> HASHES = {
-   {"Original", hashFunction},
-   {"Improved", hash_v2::hashFunction},
+   {"hash_v2", hash_v2::hashFunction},
+   {"SHA-256", sha256Function},
 };
 
 // Same alphabet, seeds and sizes as experiments 2 and 3
@@ -189,7 +210,7 @@ static void runSpeed(std::ostream& report, const fs::path& konstDir, const fs::p
    });
 
    std::ofstream csv(outDir / "bench.csv");
-   csv << "filename,size_bytes,original_seconds,improved_seconds\n" << std::setprecision(12);
+   csv << "filename,size_bytes,hash_v2_seconds,sha256_seconds\n" << std::setprecision(12);
 
    report << std::left << std::setw(18) << "File" << std::right << std::setw(10) << "Bytes"
           << std::setw(16) << (HASHES[0].name + " ms") << std::setw(16) << (HASHES[1].name + " ms") << "\n";
@@ -197,11 +218,11 @@ static void runSpeed(std::ostream& report, const fs::path& konstDir, const fs::p
    std::size_t sink = 0;
    for (const auto& file : files) {
       std::string content = readFile(file);
-      double original = averageSeconds(HASHES[0], content, sink);
-      double improved = averageSeconds(HASHES[1], content, sink);
-      csv << file.filename().string() << ',' << content.size() << ',' << original << ',' << improved << '\n';
+      double first = averageSeconds(HASHES[0], content, sink);
+      double second = averageSeconds(HASHES[1], content, sink);
+      csv << file.filename().string() << ',' << content.size() << ',' << first << ',' << second << '\n';
       report << std::left << std::setw(18) << file.filename().string() << std::right << std::setw(10) << content.size()
-             << std::setprecision(4) << std::setw(16) << original * 1000 << std::setw(16) << improved * 1000 << "\n";
+             << std::setprecision(4) << std::setw(16) << first * 1000 << std::setw(16) << second * 1000 << "\n";
    }
    report << "\nAverage of " << BENCH_RUNS << " runs after one untimed warm-up run. Data: out/bench.csv\n";
    std::cerr << "(checksum " << sink << ")\n";
@@ -504,7 +525,7 @@ static void runAvalanche(std::ostream& report, int pairs, const fs::path& outDir
                       + " pairs that differ in one character (" + std::to_string(pairsPerLength) + " per length)");
 
    std::ofstream csv(outDir / "avalanche.csv");
-   csv << "length,original_bit_pct,improved_bit_pct,original_hex_pct,improved_hex_pct\n" << std::setprecision(10);
+   csv << "length,hash_v2_bit_pct,sha256_bit_pct,hash_v2_hex_pct,sha256_hex_pct\n" << std::setprecision(10);
 
    const std::size_t n = HASHES.size();
    std::vector<std::vector<Stats>> bitStats(n, std::vector<Stats>(LENGTHS.size())), hexStats = bitStats;
@@ -627,12 +648,12 @@ int main(int argc, char* argv[]) {
    fs::path outDir = baseDir / "out";
    fs::create_directories(outDir);
 
-   // Untimed warm-up runs that load the image for both hashes
+   // Untimed warm-up runs (hash_v2 loads the image)
    for (const auto& h : HASHES) h.function("warm-up", "");
 
-   std::ofstream report(baseDir / "exp4_results.txt");
+   std::ofstream report(baseDir / "exp5_results.txt");
    report << std::fixed << std::setprecision(2);
-   report << "Original: hash.hpp, improved: hash_v2.hpp\n";
+   report << "hash_v2: hash_v2.hpp, SHA-256: " << OPENSSL_VERSION_TEXT << "\n";
    report << "Inputs and seeds are the same as in experiments 1-3 (std::mt19937_64, seed " << SEED << ")\n";
 
    std::cerr << "Correctness...\n";
@@ -644,6 +665,6 @@ int main(int argc, char* argv[]) {
    runAvalanche(report, pairs, outDir);
    runBruteForce(report);
 
-   std::cerr << "Done. Results: " << (baseDir / "exp4_results.txt").string() << "\n";
+   std::cerr << "Done. Results: " << (baseDir / "exp5_results.txt").string() << "\n";
    return 0;
 }

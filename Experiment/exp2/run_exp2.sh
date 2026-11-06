@@ -15,7 +15,7 @@ set -euo pipefail
 EXP_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$EXP_DIR/../.." && pwd)"
 
-# The hash reads image.png from the working directory, so run everything from Project_1
+# The hash reads image.png from the working directory, so run everything from the repository root
 cd "$PROJECT_DIR"
 
 if [[ -z "${PYTHON:-}" ]]; then
@@ -23,8 +23,6 @@ if [[ -z "${PYTHON:-}" ]]; then
       PYTHON="$VIRTUAL_ENV/bin/python"
    elif [[ -x "$PROJECT_DIR/.venv/bin/python" ]]; then
       PYTHON="$PROJECT_DIR/.venv/bin/python"
-   elif [[ -x "$PROJECT_DIR/../.venv/bin/python" ]]; then
-      PYTHON="$PROJECT_DIR/../.venv/bin/python"
    else
       PYTHON="python3"
    fi

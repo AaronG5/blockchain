@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../hash.hpp"
+#include "../../src/headers/hash.hpp"
 
 namespace fs = std::filesystem;
 

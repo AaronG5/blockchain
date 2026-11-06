@@ -23,8 +23,9 @@ COMPARE_SHA256_SOURCE = $(EXP5_DIR)/compare_sha256.cpp
 # OpenSSL provides SHA-256 for experiment 5 (pkg-config finds Homebrew's OpenSSL on macOS)
 OPENSSL_FLAGS = $(shell pkg-config --cflags --libs openssl 2>/dev/null || echo -lcrypto)
 TARGETS = $(CLI_TARGET) $(CLI_V2_TARGET) $(BENCH_KONST_TARGET) $(COLLISION_TARGET) $(AVALANCHE_TARGET) $(BRUTE_FORCE_TARGET) $(COMPARE_TARGET) $(COMPARE_SHA256_TARGET)
-HEADERS = hash.hpp stb_image.h
-HEADERS_V2 = hash_v2.hpp stb_image.h
+HEADER_DIR = src/headers
+HEADERS = $(HEADER_DIR)/hash.hpp $(HEADER_DIR)/stb_image.h
+HEADERS_V2 = $(HEADER_DIR)/hash_v2.hpp $(HEADER_DIR)/stb_image.h
 
 .PHONY: build rebuild clean
 

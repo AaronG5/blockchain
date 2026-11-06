@@ -9,7 +9,7 @@ set -euo pipefail
 EXP_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$EXP_DIR/../.." && pwd)"
 
-# The hash reads image.png from the working directory, so run everything from Project_1
+# The hash reads image.png from the working directory, so run everything from the repository root
 cd "$PROJECT_DIR"
 
 step() { printf '\n==> %s\n' "$1"; }

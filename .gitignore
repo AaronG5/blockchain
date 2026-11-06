@@ -1,3 +1,12 @@
 .DS_Store
 /bin/
 .vs_code
+# Build outputs (make build)
+/cli_hasher
+/cli_hasher_v2
+/Experiment/exp1/bench_konst
+/Experiment/exp2/collision_test
+/Experiment/exp2/avalanche_test
+/Experiment/exp3/brute_force
+/Experiment/exp4/compare
+/Experiment/exp5/compare_sha256

@@ -5,7 +5,7 @@
 // character from the same alphabet (the length stays the same). For every pair the two hashes
 // are compared bit by bit (after decoding the hex) and hex digit by hex digit.
 //
-// Usage (from Project_1, because the hash reads image.png from the working directory):
+// Usage (from the repository root, because the hash reads image.png from the working directory):
 //    ./Experiment/exp2/avalanche_test [baseDir] [pairs]
 
 #include <algorithm>
@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "../../hash.hpp"
+#include "../../src/headers/hash.hpp"
 
 namespace fs = std::filesystem;
 

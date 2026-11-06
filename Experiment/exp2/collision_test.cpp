@@ -7,7 +7,7 @@
 // 3. Structured inputs: small hand-made sets (permutations, repeated patterns, byte swaps, ...)
 //    that target weaknesses random inputs are unlikely to hit.
 //
-// Usage (from Project_1, because the hash reads image.png from the working directory):
+// Usage (from the repository root, because the hash reads image.png from the working directory):
 //    ./Experiment/exp2/collision_test [baseDir] [pairs]
 
 #include <algorithm>
@@ -26,7 +26,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../hash.hpp"
+#include "../../src/headers/hash.hpp"
 
 namespace fs = std::filesystem;
 

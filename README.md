@@ -8,7 +8,7 @@ This is a custom hash function that uses raw pixel data from an image to hash it
 
 A PNG image named [`image.png`](image.png) must be present in the directory the program is run from.
 
-The hash function is implemented in [`hash.hpp`](hash.hpp).
+The hash function is implemented in [`hash.hpp`](src/headers/hash.hpp).
 
 ### Input
 
@@ -32,7 +32,7 @@ Only the first 128 bytes of the input are used directly. Bytes after that only a
 
 ### Running the hash function
 
-From the `Project_1` directory:
+From the repository root:
 
 ```bash
 make build
@@ -61,7 +61,7 @@ The script builds the executables, runs each step in order and prints where the 
    - A file with non-ASCII characters.
 2. [`test_files.py`](Experiment/exp1/test_files.py) tests the generated files. For every file, the script checks that the hash has the correct length and that hashing the content as text gives the same hash as hashing the file. The results are written to [`exp1_results.txt`](Experiment/exp1/exp1_results.txt).
 3. [`gen_konst.py`](Experiment/exp1/gen_konst.py) generates `.txt` snippets of [`konstitucija.txt`](Experiment/exp1/konstitucija.txt) in `gen_konst/`.
-4. [`bench_konst.cpp`](Experiment/exp1/bench_konst.cpp) benchmarks the hash function on each constitution snippet. An untimed warm-up run loads the image into the cache, then each snippet is hashed and timed 10 times. The results are written to `out_konst/bench_konst.csv` and show the filename, file size in bytes, and the average, minimum and maximum hashing time. To run it, use `make build` and then `./Experiment/exp1/bench_konst` from the `Project_1` directory.
+4. [`bench_konst.cpp`](Experiment/exp1/bench_konst.cpp) benchmarks the hash function on each constitution snippet. An untimed warm-up run loads the image into the cache, then each snippet is hashed and timed 10 times. The results are written to `out_konst/bench_konst.csv` and show the filename, file size in bytes, and the average, minimum and maximum hashing time. To run it, use `make build` and then `./Experiment/exp1/bench_konst` from the repository root.
 5. [`graph.py`](Experiment/exp1/graph.py) generates a graph from `bench_konst.csv` to visualize the hash function's speed and saves it as [`out_konst/bench_graph.png`](Experiment/exp1/out_konst/bench_graph.png).
 
 ![Benchmark Graph](Experiment/exp1/out_konst/bench_graph.png)
@@ -115,7 +115,7 @@ An improved version of the image-based hash function. The image is still the onl
 
 A PNG image named [`image.png`](image.png) must be present in the directory the program is run from.
 
-The hash function is implemented in [`hash_v2.hpp`](hash_v2.hpp) as `hash_v2::hashFunction(input, saltHex)`.
+The hash function is implemented in [`hash_v2.hpp`](src/headers/hash_v2.hpp) as `hash_v2::hashFunction(input, saltHex)`.
 
 ### Input
 
@@ -139,7 +139,7 @@ None: every byte of the input is used.
 
 ### Running the hash function
 
-From the `Project_1` directory:
+From the repository root:
 
 ```bash
 make build

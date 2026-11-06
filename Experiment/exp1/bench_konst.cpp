@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <iomanip>
 
-#include "../../hash.hpp"
+#include "../../src/headers/hash.hpp"
 
 namespace fs = std::filesystem;
 

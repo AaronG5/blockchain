@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Compares the original hash (hash.hpp) with the improved one (hash_v2.hpp): build, comparison and graphs.
+# Compares the improved hash (hash_v2.hpp) with SHA-256 (OpenSSL): build, comparison and graphs.
 #
 # Usage (from anywhere):
-#    ./Experiment/exp4/run_exp4.sh [pairs]
+#    ./Experiment/exp5/run_exp5.sh [pairs]
 #
 # pairs defaults to 100000, as in experiment 2. The correctness and speed tests use the files
 # from Experiment/exp1/gen and Experiment/exp1/gen_konst (run_exp1.sh generates them).
@@ -15,7 +15,7 @@ set -euo pipefail
 EXP_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$EXP_DIR/../.." && pwd)"
 
-# Both hashes read image.png from the working directory, so run everything from Project_1
+# hash_v2 reads image.png from the working directory, so run everything from the repository root
 cd "$PROJECT_DIR"
 
 if [[ -z "${PYTHON:-}" ]]; then
@@ -23,8 +23,6 @@ if [[ -z "${PYTHON:-}" ]]; then
       PYTHON="$VIRTUAL_ENV/bin/python"
    elif [[ -x "$PROJECT_DIR/.venv/bin/python" ]]; then
       PYTHON="$PROJECT_DIR/.venv/bin/python"
-   elif [[ -x "$PROJECT_DIR/../.venv/bin/python" ]]; then
-      PYTHON="$PROJECT_DIR/../.venv/bin/python"
    else
       PYTHON="python3"
    fi
@@ -35,8 +33,8 @@ step() { printf '\n==> %s\n' "$1"; }
 step "Building executables"
 make build
 
-step "Comparing hashes (compare)"
-"$EXP_DIR/compare" "$EXP_DIR" "${1:-100000}"
+step "Comparing hash_v2 with SHA-256 (compare_sha256)"
+"$EXP_DIR/compare_sha256" "$EXP_DIR" "${1:-100000}"
 
 step "Drawing graphs (compare_graph.py)"
 if "$PYTHON" -c "import matplotlib" 2>/dev/null; then
@@ -47,7 +45,7 @@ else
 fi
 
 step "Done"
-echo "Summary:             $EXP_DIR/exp4_results.txt"
+echo "Summary:             $EXP_DIR/exp5_results.txt"
 echo "Data:                $EXP_DIR/out/avalanche.csv, $EXP_DIR/out/bench.csv"
 echo "Avalanche histogram: $EXP_DIR/out/avalanche_compare.png"
 echo "Speed graph:         $EXP_DIR/out/bench_compare.png"
