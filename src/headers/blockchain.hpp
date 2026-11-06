@@ -16,6 +16,7 @@ private:
    State initial;
    State confirmed;
    std::unordered_set<std::string> includedIds;
+   std::unordered_set<std::string> knownKeys;
    unsigned int difficulty;
    unsigned int version;
 
@@ -35,14 +36,17 @@ private:
          if(!tx.hasValidId()) { reason = "invalid id " + tx.getId(); return false; }
          if(includedIds.count(tx.getId())) { reason = "already in chain " + tx.getId(); return false; }
          if(!seen.insert(tx.getId()).second) { reason = "duplicate in block " + tx.getId(); return false; }
+         for(const Output& out : tx.getOutputs()) {
+            if(!isKnownUser(out.ownerPK)) { reason = "unknown receiver " + tx.getId(); return false; }
+         }
          if(!state.apply(tx, reason)) return false;
       }
       return true;
    }
 
 public:
-   explicit Blockchain(State initialState, unsigned int difficulty = 3, unsigned int version = 1)
-      : initial(std::move(initialState)), confirmed(initial), difficulty(difficulty), version(version) {}
+   Blockchain(State initialState, std::unordered_set<std::string> knownKeys, unsigned int difficulty = 3, unsigned int version = 1)
+      : initial(std::move(initialState)), confirmed(initial), knownKeys(std::move(knownKeys)), difficulty(difficulty), version(version) {}
 
    Block createBlock(const std::vector<Transaction>& transactions) const {
       return Block(getHeadHash(), std::time(nullptr), version, transactions, difficulty);
@@ -61,6 +65,9 @@ public:
    std::string getHeadHash() const {
       return chain.empty() ? std::string(64, '0') : chain.back().hash();
    }
+
+   bool isKnownUser(const std::string& publicKey) const { return knownKeys.count(publicKey) > 0; }
+   bool isIncluded(const std::string& transactionId) const { return includedIds.count(transactionId) > 0; }
 
    int size() const { return chain.size(); }
    const std::vector<Block>& getChain() const { return chain; }
