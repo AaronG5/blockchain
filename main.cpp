@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -24,11 +23,6 @@ struct Config {
    std::size_t badPerKind = 5;
 };
 
-struct Rejected {
-   Transaction tx;
-   std::string reason;
-};
-
 // Usage: blockchain [seed] [users] [transactions] [bad transactions per kind]
 Config readConfig(int argc, char* argv[]) {
    if(argc > 5) {
@@ -41,50 +35,6 @@ Config readConfig(int argc, char* argv[]) {
    if(argc > 3) config.transactions = std::stoull(argv[3]);
    if(argc > 4) config.badPerKind = std::stoull(argv[4]);
    return config;
-}
-
-std::string findPermanentProblem(const Transaction& tx, const std::unordered_set<std::string>& knownKeys) {
-   if(!tx.hasValidId()) return "invalid id";
-   if(tx.getInputs().empty()) return "missing inputs";
-   if(tx.getOutputs().empty()) return "missing outputs";
-
-   for(const Output& out : tx.getOutputs()) {
-      if(out.amount == 0) return "zero amount output";
-      if(knownKeys.count(out.ownerPK) == 0) return "unknown receiver";
-   }
-   return "";
-}
-
-std::vector<Transaction> filterPool(const std::vector<Transaction>& generated, const std::vector<User>& users, std::vector<Rejected>& rejected) {
-   std::unordered_set<std::string> knownKeys;
-   for(const User& user : users) knownKeys.insert(user.getPublicKey());
-
-   std::vector<Transaction> pool;
-   pool.reserve(generated.size());
-
-   std::unordered_set<std::string> poolIds;
-   for(const Transaction& tx : generated) {
-      std::string problem = findPermanentProblem(tx, knownKeys);
-      if(problem.empty() && poolIds.count(tx.getId())) problem = "id already in pool";
-
-      if(problem.empty()) {
-         poolIds.insert(tx.getId());
-         pool.push_back(tx);
-      }
-      else {
-         rejected.push_back({tx, problem});
-      }
-   }
-   return pool;
-}
-
-void removeFromPool(std::vector<Transaction>& pool, const std::vector<Transaction>& included) {
-   std::unordered_set<std::string> includedIds;
-   for(const Transaction& tx : included) includedIds.insert(tx.getId());
-
-   pool.erase(std::remove_if(pool.begin(), pool.end(), [&includedIds](const Transaction& tx) {
-      return includedIds.count(tx.getId()) > 0;
-   }), pool.end());
 }
 
 void printBlock(std::size_t height, const Block& block, const MiningResult& result) {
@@ -123,10 +73,13 @@ int run(const Config& config) {
    std::vector<Transaction> generated = generateTransactions(users, initial, config.transactions, rng);
    addBadTransactions(generated, config.badPerKind, rng);
 
-   std::vector<Rejected> rejected;
-   std::vector<Transaction> pool = filterPool(generated, users, rejected);
+   std::unordered_set<std::string> knownKeys;
+   for(const User& user : users) knownKeys.insert(user.getPublicKey());
+   Blockchain chain(initial, std::move(knownKeys));
 
-   Blockchain chain(initial);
+   std::vector<Rejected> rejected;
+   std::vector<Transaction> pool = filterPool(generated, chain, rejected);
+
    std::string reason;
 
    // Genesis block
