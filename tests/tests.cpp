@@ -338,17 +338,25 @@ void sequentialBudgetsAndLimit() {
    const std::uint64_t allRounds = FIRST_ROUND_BUDGET * ((1ull << result.rounds) - 1);
    const std::uint64_t earlierRounds = FIRST_ROUND_BUDGET * ((1ull << (result.rounds - 1)) - 1);
    std::uint64_t total = 0;
+   bool onlyWinnerSolved = true;
+   bool continuous = true;
+   bool budgetsDoubled = true;
+   bool noValidBefore = true;
    for(int i = 0; i < race.size(); ++i) {
       const Candidate& candidate = race[i];
       total += candidate.attempts;
-      CHECK(candidate.solved == (i == result.winner));
-      CHECK(candidate.nextNonce == candidate.attempts);
-      if(i < result.winner) CHECK(candidate.attempts == allRounds);
-      if(i > result.winner) CHECK(candidate.attempts == earlierRounds);
+      onlyWinnerSolved = onlyWinnerSolved && candidate.solved == (i == result.winner);
+      continuous = continuous && candidate.nextNonce == candidate.attempts;
+      if(i < result.winner) budgetsDoubled = budgetsDoubled && candidate.attempts == allRounds;
+      if(i > result.winner) budgetsDoubled = budgetsDoubled && candidate.attempts == earlierRounds;
 
       const std::uint64_t triedWithoutSuccess = i == result.winner ? candidate.attempts - 1 : candidate.attempts;
-      CHECK(noValidNonce(candidate.block, 0, triedWithoutSuccess));
+      noValidBefore = noValidBefore && noValidNonce(candidate.block, 0, triedWithoutSuccess);
    }
+   CHECK(onlyWinnerSolved);
+   CHECK(continuous);
+   CHECK(budgetsDoubled);
+   CHECK(noValidBefore);
    CHECK(total == result.totalAttempts);
    CHECK(race[result.winner].block.getHeader().nonce == race[result.winner].attempts - 1);
 
