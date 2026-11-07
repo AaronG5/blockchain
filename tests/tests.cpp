@@ -404,6 +404,7 @@ void formatsAndDeterminism() {
    // Block header: <prevHash>|<timestamp>|<version>|<txRoot>|<difficulty>|<nonce>
    const Block::Header header{std::string(64, '0'), 1762500000, 2, hash::hashFunction(""), 3, 42};
    CHECK(header.serialize() == std::string(64, '0') + "|1762500000|2|" + hash::hashFunction("") + "|3|42");
+   CHECK(header.serializePrefix() + "42" == header.serialize());   // what the miner writes the nonce after
    const Block block(header, {});
    CHECK(block.hash() == hash::hashFunction(header.serialize()));
    CHECK(block.hash() == Block(header, {}).hash());   // a fixed header gives the same hash every time

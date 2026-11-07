@@ -19,10 +19,15 @@ public:
       std::uint32_t difficulty;
       std::uint64_t nonce;
 
+      // Every field except the nonce, which is the only one that changes while mining
+      std::string serializePrefix() const {
+         return prevHash + "|" + std::to_string(timestamp) + "|"
+                + std::to_string(version) + "|" + txRoot + "|"
+                + std::to_string(difficulty) + "|";
+      }
+
       std::string serialize() const {
-         return prevHash + "|" + std::to_string(timestamp) + "|" 
-                + std::to_string(version) + "|" + txRoot + "|" 
-                + std::to_string(difficulty) + "|" + std::to_string(nonce);
+         return serializePrefix() + std::to_string(nonce);
       }
    };
 
@@ -82,8 +87,16 @@ public:
    }
 
    bool hasValidPow() const {
-      const std::string h = hash();
-      return h.compare(0, header.difficulty, std::string(header.difficulty, '0')) == 0;
+      return meetsDifficulty(hash(), header.difficulty);
+   }
+
+   // The hash starts with `difficulty` hex zeros
+   static bool meetsDifficulty(const std::string& blockHash, std::uint32_t difficulty) {
+      if(difficulty > blockHash.size()) return false;
+      for(std::uint32_t i = 0; i < difficulty; ++i) {
+         if(blockHash[i] != '0') return false;
+      }
+      return true;
    }
 
    void setNonce(std::uint64_t nonce) { header.nonce = nonce; }

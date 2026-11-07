@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <charconv>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <thread>
 #include <unordered_set>
@@ -9,18 +11,10 @@
 #include "../headers/blockchain.hpp"
 
 MiningResult mine(Block& block) {
-   auto start = std::chrono::steady_clock::now();
-
-   std::uint64_t nonce = 0;
-   block.setNonce(nonce);
-   while(!block.hasValidPow()) {
-      block.setNonce(++nonce);
-   }
-
-   auto end = std::chrono::steady_clock::now();
-   double seconds = std::chrono::duration<double>(end - start).count();
-
-   return {nonce + 1, seconds};
+   Candidate candidate{std::move(block)};
+   mineWithBudget(candidate, std::numeric_limits<std::uint64_t>::max());
+   block = std::move(candidate.block);
+   return {candidate.attempts, candidate.timeSec};
 }
 
 std::vector<Candidate> buildCandidates(std::vector<Transaction>& pool, const Blockchain& chain, Random& rng, std::size_t count) {
@@ -33,19 +27,41 @@ std::vector<Candidate> buildCandidates(std::vector<Transaction>& pool, const Blo
    return candidates;
 }
 
+// Only the nonce changes between attempts, so the rest of the header is serialized once and every attempt just
+// writes the nonce digits after it, in the same buffer, without allocating. The progress is kept in local
+// variables and written to the candidate at the end, so parallel threads don't keep writing next to each other
 bool mineWithBudget(Candidate& candidate, std::uint64_t budget, const std::atomic<bool>* stop) {
    const auto start = std::chrono::steady_clock::now();
 
-   for(std::uint64_t i = 0; i < budget && !candidate.solved; ++i) {
-      if(stop && stop->load()) break;
-      candidate.block.setNonce(candidate.nextNonce++);
-      ++candidate.attempts;
-      candidate.solved = candidate.block.hasValidPow();
+   const std::uint32_t difficulty = candidate.block.getHeader().difficulty;
+   std::string serialized = candidate.block.getHeader().serializePrefix();
+   const std::size_t prefixSize = serialized.size();
+   char digits[std::numeric_limits<std::uint64_t>::digits10 + 1];
+   serialized.reserve(prefixSize + sizeof(digits));
+
+   bool solved = candidate.solved;
+   std::uint64_t nonce = candidate.nextNonce;
+   std::uint64_t attempts = 0;
+   while(!solved && attempts < budget && !(stop && stop->load(std::memory_order_relaxed))) {
+      const char* end = std::to_chars(digits, digits + sizeof(digits), nonce).ptr;
+      serialized.resize(prefixSize);
+      serialized.append(digits, end - digits);
+
+      ++attempts;
+      if(Block::meetsDifficulty(hash::hashFunction(serialized), difficulty)) {
+         candidate.block.setNonce(nonce);
+         solved = true;
+      }
+      ++nonce;
    }
+
+   candidate.nextNonce = nonce;
+   candidate.attempts += attempts;
+   candidate.solved = solved;
 
    const auto end = std::chrono::steady_clock::now();
    candidate.timeSec += std::chrono::duration<double>(end - start).count();
-   return candidate.solved;
+   return solved;
 }
 
 RaceResult mineCandidates(std::vector<Candidate>& candidates, std::uint64_t budget, std::uint64_t maxTotalAttempts) {
