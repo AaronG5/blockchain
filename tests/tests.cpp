@@ -269,6 +269,119 @@ void parallelCandidates() {
    });
 }
 
+// Difficulty 64 needs a hash of only zeros, which never happens, so these candidates use up every budget
+static std::vector<Candidate> unsolvable(std::size_t count) {
+   std::vector<Candidate> candidates;
+   for(std::size_t i = 0; i < count; ++i) {
+      candidates.push_back({Block(std::string(64, '0'), static_cast<std::int64_t>(i), 2, {}, 64)});
+   }
+   return candidates;
+}
+
+// CANDIDATES_PER_BLOCK candidates for block 1, each paying B a different amount
+static std::vector<Candidate> solvable(const Blockchain& chain) {
+   std::vector<Candidate> candidates;
+   for(unsigned int i = 0; i < CANDIDATES_PER_BLOCK; ++i) {
+      candidates.push_back({chain.createBlock({Transaction({A_COINS}, {{B, 1 + i}, {A, 99 - i}}, i + 1)})});
+   }
+   return candidates;
+}
+
+// True if no nonce in [from, to) meets the block's difficulty
+static bool noValidNonce(Block block, std::uint64_t from, std::uint64_t to) {
+   for(std::uint64_t nonce = from; nonce < to; ++nonce) {
+      block.setNonce(nonce);
+      if(block.hasValidPow()) return false;
+   }
+   return true;
+}
+
+// mine() counts the nonce up from 0 and stops at the first one that meets the difficulty
+void mineFindsFirstNonce() {
+   const Blockchain chain = makeChain();
+   Block block = chain.createBlock({Transaction({A_COINS}, {{B, 70}, {A, 30}}, 1)});
+   const MiningResult result = mine(block);
+   const std::uint64_t nonce = block.getHeader().nonce;
+
+   CHECK(block.hasValidPow());
+   CHECK(result.attempts == nonce + 1);
+   CHECK(noValidNonce(block, 0, nonce));
+}
+
+// Budgets double each round, every round continues at the first untried nonce, and the overall limit is exact
+void sequentialBudgetsAndLimit() {
+   // Round 1: 10 each (30 in total), round 2: 20 each (90), round 3: #1 gets the last 10 and the limit is reached
+   std::vector<Candidate> stuck = unsolvable(3);
+   const RaceResult limited = mineCandidates(stuck, 10, 100);
+   CHECK(limited.winner == -1);
+   CHECK(limited.rounds == 3);
+   CHECK(limited.totalAttempts == 100);
+   CHECK(stuck[0].attempts == 40 && stuck[1].attempts == 30 && stuck[2].attempts == 30);
+   for(const Candidate& candidate : stuck) {
+      CHECK(!candidate.solved);
+      CHECK(candidate.nextNonce == candidate.attempts);   // nonces 0, 1, 2, ..., none skipped or tried twice
+   }
+
+   // The first candidate in order to reach a valid nonce wins, at its first valid nonce. Nobody tried a valid
+   // nonce before that, otherwise they would have won
+   Blockchain chain = makeChain();
+   std::vector<Candidate> race = solvable(chain);
+   const RaceResult result = mineCandidates(race, FIRST_ROUND_BUDGET, 100000000);
+   CHECK(result.winner >= 0);
+   if(result.winner < 0) return;
+
+   // Budgets of all finished rounds: 1000, 1000 + 2000, 1000 + 2000 + 4000, ...
+   const std::uint64_t allRounds = FIRST_ROUND_BUDGET * ((1ull << result.rounds) - 1);
+   const std::uint64_t earlierRounds = FIRST_ROUND_BUDGET * ((1ull << (result.rounds - 1)) - 1);
+   std::uint64_t total = 0;
+   for(int i = 0; i < race.size(); ++i) {
+      const Candidate& candidate = race[i];
+      total += candidate.attempts;
+      CHECK(candidate.solved == (i == result.winner));
+      CHECK(candidate.nextNonce == candidate.attempts);
+      if(i < result.winner) CHECK(candidate.attempts == allRounds);
+      if(i > result.winner) CHECK(candidate.attempts == earlierRounds);
+
+      const std::uint64_t triedWithoutSuccess = i == result.winner ? candidate.attempts - 1 : candidate.attempts;
+      CHECK(noValidNonce(candidate.block, 0, triedWithoutSuccess));
+   }
+   CHECK(total == result.totalAttempts);
+   CHECK(race[result.winner].block.getHeader().nonce == race[result.winner].attempts - 1);
+
+   // Nothing to mine: no winner, no rounds, no attempts
+   std::vector<Candidate> none;
+   const RaceResult empty = mineCandidates(none, FIRST_ROUND_BUDGET, 100);
+   CHECK(empty.winner == -1 && empty.rounds == 0 && empty.totalAttempts == 0);
+}
+
+// Every thread mines an equal share of the limit and no more; once one thread wins, the others stop
+void parallelLimitAndStop() {
+   std::vector<Candidate> stuck = unsolvable(CANDIDATES_PER_BLOCK);
+   const RaceResult limited = mineCandidatesParallel(stuck, 1003);   // 200 each, the last 3 stay unused
+   CHECK(limited.winner == -1);
+   CHECK(limited.totalAttempts == 1000);
+   for(const Candidate& candidate : stuck) {
+      CHECK(!candidate.solved && candidate.attempts == 200 && candidate.nextNonce == 200);
+   }
+
+   // Without the stop every thread would go on to its share of 20,000,000. Difficulty 3 needs about 4,096 attempts
+   // on average, so a race that used a million has not stopped
+   Blockchain chain = makeChain();
+   std::vector<Candidate> race = solvable(chain);
+   const RaceResult result = mineCandidatesParallel(race, 100000000);
+   CHECK(result.winner >= 0);
+   CHECK(result.totalAttempts < 1000000);
+   if(result.winner >= 0) CHECK(race[result.winner].solved && race[result.winner].block.hasValidPow());
+
+   std::uint64_t total = 0;
+   for(const Candidate& candidate : race) total += candidate.attempts;
+   CHECK(total == result.totalAttempts);
+
+   std::vector<Candidate> none;
+   const RaceResult empty = mineCandidatesParallel(none, 100);
+   CHECK(empty.winner == -1 && empty.totalAttempts == 0);
+}
+
 int main() {
    const std::vector<std::pair<const char*, void (*)()>> tests = {
       {"merkle tree with 0, 1, 2, 3 and 5 transactions", merkleTree},
@@ -279,6 +392,9 @@ int main() {
       {"tampered blocks", tamperedBlocks},
       {"candidates are separate, only the winner counts", candidates},
       {"parallel: candidates are separate, only the winner counts", parallelCandidates},
+      {"mining stops at the first valid nonce", mineFindsFirstNonce},
+      {"sequential race: budgets double, nonces continue, limit holds", sequentialBudgetsAndLimit},
+      {"parallel race: equal shares of the limit, losers stop", parallelLimitAndStop},
    };
 
    for(const auto& [name, test] : tests) {
