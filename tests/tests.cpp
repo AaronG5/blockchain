@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <ctime>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -382,6 +383,57 @@ void parallelLimitAndStop() {
    CHECK(empty.winner == -1 && empty.totalAttempts == 0);
 }
 
+template <typename F>
+static bool throwsInvalidArgument(F function) {
+   try { function(); }
+   catch(const std::invalid_argument&) { return true; }
+   return false;
+}
+
+// Serialized forms match the README, hashing them is deterministic and every header field counts
+void formatsAndDeterminism() {
+   // Transaction: <transactionId>:<index>;...|<ownerPK>:<amount>;...|<sequence>
+   const Transaction pay({A_COINS, B_COINS}, {{C, 120}, {A, 30}}, 7);
+   CHECK(pay.serialize() == FUNDING.getId() + ":0;" + FUNDING.getId() + ":1|" + C + ":120;" + A + ":30|7");
+   CHECK(FUNDING.serialize() == "|" + A + ":100;" + B + ":50|0");
+   CHECK(pay.getId() == hash::hashFunction(pay.serialize()));
+   CHECK(pay.getId().size() == 64);
+   CHECK(pay.getId() == Transaction({A_COINS, B_COINS}, {{C, 120}, {A, 30}}, 7).getId());   // same fields, same ID
+   CHECK(pay.getId() != Transaction({A_COINS, B_COINS}, {{C, 120}, {A, 30}}, 8).getId());   // the sequence tells them apart
+
+   // Block header: <prevHash>|<timestamp>|<version>|<txRoot>|<difficulty>|<nonce>
+   const Block::Header header{std::string(64, '0'), 1762500000, 2, hash::hashFunction(""), 3, 42};
+   CHECK(header.serialize() == std::string(64, '0') + "|1762500000|2|" + hash::hashFunction("") + "|3|42");
+   const Block block(header, {});
+   CHECK(block.hash() == hash::hashFunction(header.serialize()));
+   CHECK(block.hash() == Block(header, {}).hash());   // a fixed header gives the same hash every time
+   CHECK(block.hash().size() == 64);
+
+   // Changing any one field changes the hash
+   std::vector<Block::Header> changed(6, header);
+   changed[0].prevHash = std::string(64, '1');
+   changed[1].timestamp += 1;
+   changed[2].version += 1;
+   changed[3].txRoot = hash::hashFunction("other");
+   changed[4].difficulty += 1;
+   changed[5].nonce += 1;
+   for(const Block::Header& other : changed) CHECK(Block(other, {}).hash() != block.hash());
+
+   // The separators keep neighbouring numbers apart: timestamp 1 and version 23 is not timestamp 12 and version 3
+   Block::Header first = header;
+   Block::Header second = header;
+   first.timestamp = 1;
+   first.version = 23;
+   second.timestamp = 12;
+   second.version = 3;
+   CHECK(first.serialize() != second.serialize());
+
+   // Hex decoding used by the Merkle tree
+   CHECK(Block::hexToBytes("00ff10") == std::string("\x00\xff\x10", 3));
+   CHECK(throwsInvalidArgument([] { Block::hexToBytes("abc"); }));
+   CHECK(throwsInvalidArgument([] { Block::hexToBytes("zz"); }));
+}
+
 int main() {
    const std::vector<std::pair<const char*, void (*)()>> tests = {
       {"merkle tree with 0, 1, 2, 3 and 5 transactions", merkleTree},
@@ -395,6 +447,7 @@ int main() {
       {"mining stops at the first valid nonce", mineFindsFirstNonce},
       {"sequential race: budgets double, nonces continue, limit holds", sequentialBudgetsAndLimit},
       {"parallel race: equal shares of the limit, losers stop", parallelLimitAndStop},
+      {"serialization formats and hash determinism", formatsAndDeterminism},
    };
 
    for(const auto& [name, test] : tests) {
