@@ -42,9 +42,23 @@ $(TEST_TARGET): $(TEST_OBJECTS)
 test: $(TEST_TARGET)
 	./$(TEST_TARGET)
 
+# Line, function and branch coverage of the tests (clang source-based coverage), without optimizations so
+# every line maps to its code. stb_image.h and the tests themselves are left out of the report
+COVERAGE_DIR := bin/coverage
+COVERAGE_FLAGS := $(filter-out -O2,$(CXXFLAGS)) -O0 -fprofile-instr-generate -fcoverage-mapping
+LLVM := $(if $(filter Darwin,$(shell uname)),xcrun,)
+
+coverage:
+	@mkdir -p $(COVERAGE_DIR)
+	$(CXX) $(COVERAGE_FLAGS) tests/tests.cpp $(filter-out main.cpp,$(SOURCES)) -o $(COVERAGE_DIR)/tests
+	LLVM_PROFILE_FILE=$(COVERAGE_DIR)/tests.profraw ./$(COVERAGE_DIR)/tests
+	$(LLVM) llvm-profdata merge -sparse $(COVERAGE_DIR)/tests.profraw -o $(COVERAGE_DIR)/tests.profdata
+	$(LLVM) llvm-cov report $(COVERAGE_DIR)/tests -instr-profile=$(COVERAGE_DIR)/tests.profdata \
+		-ignore-filename-regex='(stb_image|tests/)' -show-region-summary=false
+
 clean:
 	rm -rf bin
 
 -include $(DEPENDENCIES)
 
-.PHONY: all run benchmark test clean
+.PHONY: all run benchmark test coverage clean
