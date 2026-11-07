@@ -770,6 +770,76 @@ void fullAndLastBlock() {
    CHECK(chain.getConfirmed().total() == 150);
 }
 
+// ---- Remaining validation rules ----
+
+static std::string whyNot(const State& state, const Transaction& tx) {
+   std::string reason;
+   return state.canApply(tx, reason) ? "" : reason;
+}
+
+// Every transaction rule has its own reason. A failed apply adds the ID to it and changes nothing
+void transactionRules() {
+   const State state(FUNDING);
+   CHECK(whyNot(state, Transaction({}, {{B, 10}}, 1)) == "missing inputs");
+   CHECK(whyNot(state, Transaction({A_COINS}, {}, 2)) == "missing outputs");
+   CHECK(whyNot(state, Transaction({A_COINS, A_COINS}, {{B, 200}}, 3)) == "input used twice");
+   CHECK(whyNot(state, Transaction({{FUNDING.getId(), 7}}, {{B, 10}}, 4)) == "unknown or spent output");
+   CHECK(whyNot(state, Transaction({A_COINS, B_COINS}, {{C, 150}}, 5)) == "inputs have different owners");
+   CHECK(whyNot(state, Transaction({A_COINS}, {{B, 100}, {A, 0}}, 6)) == "zero amount output");
+   CHECK(whyNot(state, Transaction({A_COINS}, {{A, 100}}, 7)) == "owner pays only themselves");
+   CHECK(whyNot(state, Transaction({A_COINS}, {{B, 150}}, 8)) == "input and output totals don't match");
+   CHECK(whyNot(state, Transaction({A_COINS}, {{B, 60}}, 9)) == "input and output totals don't match");   // no fees
+   CHECK(whyNot(state, Transaction({A_COINS}, {{B, 70}, {A, 30}}, 10)).empty());
+
+   State copy = state;
+   std::string reason;
+   const Transaction twice({A_COINS, A_COINS}, {{B, 200}}, 11);
+   CHECK(!copy.apply(twice, reason));
+   CHECK(reason == "input used twice " + twice.getId());
+   CHECK(copy.total() == 150 && copy.balanceOf(A) == 100 && copy.balanceOf(B) == 50 && copy.size() == 2);
+
+   // The pool turns away transactions without inputs or outputs too
+   std::vector<Rejected> rejected;
+   CHECK(filterPool({Transaction({}, {{B, 10}}, 1), Transaction({A_COINS}, {}, 2)}, makeChain(), rejected).empty());
+   CHECK(rejected.size() == 2 && rejected[0].reason == "missing inputs" && rejected[1].reason == "missing outputs");
+}
+
+// A mined block is rejected for a version the chain doesn't use, more than 100 transactions, or a transaction that
+// the pool would have turned away, and nothing changes
+void blockRules() {
+   Blockchain chain = makeChain();
+   const Transaction pay({A_COINS}, {{B, 70}, {A, 30}}, 1);
+   std::string reason;
+
+   Block otherVersion(chain.getHeadHash(), std::time(nullptr), chain.getVersion() + 1, {pay}, chain.getDifficulty());
+   mine(otherVersion);
+   CHECK(!chain.addBlock(otherVersion, reason));
+   CHECK(reason == "wrong version");
+   checkUnchanged(chain, 1, 100, 50);
+
+   CHECK(!chain.addBlock(minedBlock(chain, std::vector<Transaction>(MAX_TRANSACTIONS_PER_BLOCK + 1, pay)), reason));
+   CHECK(reason == "too many transactions");
+   checkUnchanged(chain, 1, 100, 50);
+
+   const Transaction tamperedId({A_COINS}, {{B, 70}, {A, 30}}, 2, pay.getId());
+   CHECK(!chain.addBlock(minedBlock(chain, {tamperedId}), reason));
+   CHECK(reason == "invalid id " + pay.getId());
+   checkUnchanged(chain, 1, 100, 50);
+
+   const Transaction zeroAmount({A_COINS}, {{B, 100}, {A, 0}}, 3);
+   CHECK(!chain.addBlock(minedBlock(chain, {zeroAmount}), reason));
+   CHECK(reason == "zero amount output " + zeroAmount.getId());
+   checkUnchanged(chain, 1, 100, 50);
+
+   // A block that fails at its second transaction doesn't keep the first one either
+   const Transaction fromB({B_COINS}, {{C, 50}}, 4);
+   CHECK(!chain.addBlock(minedBlock(chain, {fromB, zeroAmount}), reason));
+   CHECK(!chain.isIncluded(fromB.getId()));
+   checkUnchanged(chain, 1, 100, 50);
+
+   CHECK(chain.addBlock(minedBlock(chain, {pay}), reason));
+}
+
 int main() {
    const std::vector<std::pair<const char*, void (*)()>> tests = {
       {"merkle tree with 0, 1, 2, 3 and 5 transactions", merkleTree},
@@ -792,6 +862,8 @@ int main() {
       {"whole cycle: funds kept, every transaction accounted for", wholeCycle},
       {"parallel: whole cycle", wholeCycleParallel},
       {"full blocks of 100, smaller last block", fullAndLastBlock},
+      {"every transaction rule gives its reason", transactionRules},
+      {"blocks: version, size and bad transactions inside", blockRules},
    };
 
    for(const auto& [name, test] : tests) {
