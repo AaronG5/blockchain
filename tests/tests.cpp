@@ -1,8 +1,11 @@
+#include <algorithm>
 #include <cstdint>
 #include <ctime>
 #include <iostream>
+#include <map>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "../src/headers/blockchain.hpp"
@@ -435,6 +438,216 @@ void formatsAndDeterminism() {
    CHECK(throwsInvalidArgument([] { Block::hexToBytes("zz"); }));
 }
 
+// ---- Generated data ----
+
+struct Generated {
+   std::vector<User> users;
+   Transaction funding;
+   std::vector<Transaction> transactions;
+};
+
+// The same steps as the program: users, initial funds, valid transactions, then the bad ones
+static Generated generate(std::uint64_t seed, std::size_t users, std::size_t transactions, std::size_t badPerKind) {
+   Random rng(seed);
+   std::vector<User> generatedUsers = generateUsers(users, rng);
+   Transaction funding = generateFunding(generatedUsers, rng);
+   std::vector<Transaction> generatedTransactions = generateTransactions(generatedUsers, State(funding), transactions, rng);
+   if(badPerKind > 0) addBadTransactions(generatedTransactions, badPerKind, rng);
+   return {std::move(generatedUsers), std::move(funding), std::move(generatedTransactions)};
+}
+
+static std::vector<std::string> idsOf(const std::vector<Transaction>& transactions) {
+   std::vector<std::string> ids;
+   for(const Transaction& tx : transactions) ids.push_back(tx.getId());
+   return ids;
+}
+
+static std::unordered_set<std::string> keysOf(const std::vector<User>& users) {
+   std::unordered_set<std::string> keys;
+   for(const User& user : users) keys.insert(user.getPublicKey());
+   return keys;
+}
+
+// The same seed gives the same users, initial balances and transactions, another seed gives different ones
+void generatorIsReproducible() {
+   const Generated first = generate(42, 20, 200, 2);
+   const Generated again = generate(42, 20, 200, 2);
+   const Generated other = generate(43, 20, 200, 2);
+
+   bool sameUsers = first.users.size() == again.users.size();
+   for(std::size_t i = 0; sameUsers && i < first.users.size(); ++i) {
+      sameUsers = first.users[i].getUserName() == again.users[i].getUserName()
+               && first.users[i].getPublicKey() == again.users[i].getPublicKey();
+   }
+   CHECK(sameUsers);
+   CHECK(first.funding.getId() == again.funding.getId());
+   CHECK(idsOf(first.transactions) == idsOf(again.transactions));
+
+   CHECK(first.users[0].getPublicKey() != other.users[0].getPublicKey());
+   CHECK(first.funding.getId() != other.funding.getId());
+   CHECK(idsOf(first.transactions) != idsOf(other.transactions));
+}
+
+// Users are user1..userN with unique keys, and the funding gives each of them one output of 100 to 1,000,000
+void generatedUsersAndFunding() {
+   const Generated data = generate(7, 50, 0, 0);
+   bool namesInOrder = true;
+   bool keysAreHashes = true;
+   for(std::size_t i = 0; i < data.users.size(); ++i) {
+      namesInOrder = namesInOrder && data.users[i].getUserName() == "user" + std::to_string(i + 1);
+      keysAreHashes = keysAreHashes && data.users[i].getPublicKey().size() == 64;
+   }
+   CHECK(data.users.size() == 50);
+   CHECK(namesInOrder);
+   CHECK(keysAreHashes);
+   CHECK(keysOf(data.users).size() == 50);
+
+   const std::vector<Output>& outputs = data.funding.getOutputs();
+   CHECK(data.funding.getInputs().empty());
+   CHECK(outputs.size() == data.users.size());
+   bool sameOrder = true;
+   bool inRange = true;
+   for(std::size_t i = 0; i < outputs.size() && i < data.users.size(); ++i) {
+      sameOrder = sameOrder && outputs[i].ownerPK == data.users[i].getPublicKey();
+      inRange = inRange && outputs[i].amount >= MIN_INITIAL_BALANCE && outputs[i].amount <= MAX_INITIAL_BALANCE;
+   }
+   CHECK(sameOrder);
+   CHECK(inRange);
+
+   const State state(data.funding);
+   CHECK(state.balanceOf(data.users[0].getPublicKey()) == outputs[0].amount);
+   CHECK(state.total() == data.funding.outputTotal());
+}
+
+// Generated transactions are valid when applied in order: the sender and receiver are different users, amounts are
+// positive, change goes back to the sender, sequences are 1, 2, 3, ... and the total never changes
+void generatedTransactionsAreValid() {
+   const Generated data = generate(7, 20, 300, 0);
+   const std::unordered_set<std::string> keys = keysOf(data.users);
+   State state(data.funding);
+   const std::uint64_t total = state.total();
+
+   // Every output created so far, to look up who owns an input
+   std::map<Input, Output> outputs;
+   auto addOutputs = [&outputs](const Transaction& tx) {
+      for(unsigned int i = 0; i < tx.getOutputs().size(); ++i) outputs.emplace(Input{tx.getId(), i}, tx.getOutputs()[i]);
+   };
+   addOutputs(data.funding);
+
+   bool validIds = true;
+   bool inOrder = true;
+   bool differentUsers = true;
+   bool positive = true;
+   bool changeToSender = true;
+   bool allApply = true;
+   for(std::size_t i = 0; i < data.transactions.size(); ++i) {
+      const Transaction& tx = data.transactions[i];
+      const auto firstInput = tx.getInputs().empty() ? outputs.end() : outputs.find(tx.getInputs()[0]);
+      const std::string sender = firstInput != outputs.end() ? firstInput->second.ownerPK : "";
+      const std::string& receiver = tx.getOutputs()[0].ownerPK;
+
+      validIds = validIds && tx.hasValidId();
+      inOrder = inOrder && tx.getSequence() == i + 1;
+      differentUsers = differentUsers && keys.count(sender) && keys.count(receiver) && sender != receiver;
+      for(const Output& out : tx.getOutputs()) positive = positive && out.amount > 0;
+      if(tx.getOutputs().size() > 1) changeToSender = changeToSender && tx.getOutputs()[1].ownerPK == sender;
+
+      std::string reason;
+      allApply = allApply && state.apply(tx, reason);
+      addOutputs(tx);
+   }
+   CHECK(data.transactions.size() == 300);
+   CHECK(validIds);
+   CHECK(inOrder);
+   CHECK(differentUsers);
+   CHECK(positive);
+   CHECK(changeToSender);
+   CHECK(allApply);
+   CHECK(state.total() == total);
+
+   // One user has nobody to pay
+   Random rng(1);
+   const std::vector<User> alone = generateUsers(1, rng);
+   CHECK(throwsInvalidArgument([&] { generateTransactions(alone, State(generateFunding(alone, rng)), 1, rng); }));
+}
+
+// perKind bad transactions of each kind: double spends get into the pool but conflict with the transaction they
+// copy, the other kinds are rejected with their reason
+void badTransactions() {
+   const Generated data = generate(7, 20, 300, 3);
+   CHECK(data.transactions.size() == 300 + 4 * 3);
+   bool inOrder = true;
+   for(std::size_t i = 0; i < data.transactions.size(); ++i) {
+      inOrder = inOrder && data.transactions[i].getSequence() == i + 1;
+   }
+   CHECK(inOrder);
+
+   const Blockchain chain(State(data.funding), keysOf(data.users));
+   std::vector<Rejected> rejected;
+   const std::vector<Transaction> pool = filterPool(data.transactions, chain, rejected);
+   std::map<std::string, int> reasons;
+   for(const Rejected& entry : rejected) ++reasons[entry.reason];
+   CHECK(rejected.size() == 9);
+   CHECK(reasons["invalid id"] == 3);
+   CHECK(reasons["zero amount output"] == 3);
+   CHECK(reasons["unknown receiver"] == 3);
+   CHECK(pool.size() == 303);
+
+   // Each double spend has the inputs of a valid transaction, so once the valid ones are applied it can't be
+   const std::vector<Transaction> valid(data.transactions.begin(), data.transactions.begin() + 300);
+   State state(data.funding);
+   std::string reason;
+   for(const Transaction& tx : valid) state.apply(tx, reason);
+
+   int doubleSpends = 0;
+   for(const Transaction& tx : pool) {
+      if(tx.getSequence() <= 300) continue;
+      ++doubleSpends;
+      bool copiesOne = false;
+      for(const Transaction& base : valid) copiesOne = copiesOne || base.getInputs() == tx.getInputs();
+      CHECK(copiesOne);
+      CHECK(!state.canApply(tx, reason) && reason == "unknown or spent output");
+   }
+   CHECK(doubleSpends == 3);
+
+   std::vector<Transaction> none;
+   Random rng(1);
+   CHECK(throwsInvalidArgument([&] { addBadTransactions(none, 1, rng); }));
+}
+
+// between() stays inside its inclusive bounds and reaches both ends, shuffle() only reorders
+void randomHelpers() {
+   Random rng(5);
+   bool inRange = true;
+   bool sawMin = false;
+   bool sawMax = false;
+   for(int i = 0; i < 1000; ++i) {
+      const std::uint64_t value = rng.between(3, 5);
+      inRange = inRange && value >= 3 && value <= 5;
+      sawMin = sawMin || value == 3;
+      sawMax = sawMax || value == 5;
+   }
+   CHECK(inRange && sawMin && sawMax);
+   CHECK(rng.between(7, 7) == 7);
+
+   std::vector<int> items(50);
+   for(int i = 0; i < 50; ++i) items[i] = i;
+   std::vector<int> shuffled = items;
+   rng.shuffle(shuffled);
+   CHECK(shuffled != items);   // the chance of staying in order is 1 in 50!
+   std::sort(shuffled.begin(), shuffled.end());
+   CHECK(shuffled == items);
+
+   // The same seed shuffles the same way
+   std::vector<int> first = items;
+   std::vector<int> second = items;
+   Random rngA(9);
+   Random rngB(9);
+   rngA.shuffle(first);
+   rngB.shuffle(second);
+   CHECK(first == second);
+}
+
 int main() {
    const std::vector<std::pair<const char*, void (*)()>> tests = {
       {"merkle tree with 0, 1, 2, 3 and 5 transactions", merkleTree},
@@ -449,6 +662,11 @@ int main() {
       {"sequential race: budgets double, nonces continue, limit holds", sequentialBudgetsAndLimit},
       {"parallel race: equal shares of the limit, losers stop", parallelLimitAndStop},
       {"serialization formats and hash determinism", formatsAndDeterminism},
+      {"generator: the same seed gives the same data", generatorIsReproducible},
+      {"generator: users and initial funds", generatedUsersAndFunding},
+      {"generator: transactions are valid in order", generatedTransactionsAreValid},
+      {"generator: bad transactions of each kind", badTransactions},
+      {"random numbers and shuffling", randomHelpers},
    };
 
    for(const auto& [name, test] : tests) {
