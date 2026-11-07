@@ -656,6 +656,120 @@ void randomHelpers() {
    CHECK(first == second);
 }
 
+// ---- Whole cycle ----
+
+// The loop of main.cpp: filter the pool, then build candidates, race, add the winner and remove its transactions
+// from the pool, until no candidate can be built. Then checks what has to hold at the end of a run
+static void checkWholeCycle(bool parallel) {
+   const Generated data = generate(11, 30, 400, 2);
+   const std::unordered_set<std::string> keys = keysOf(data.users);
+   const State initial(data.funding);
+   Blockchain chain(initial, keys);
+   Random rng(11);
+
+   std::vector<Rejected> rejected;
+   std::vector<Transaction> pool = filterPool(data.transactions, chain, rejected);
+   std::string reason;
+   Block genesis = chain.createBlock({});
+   mine(genesis);
+   CHECK(chain.addBlock(genesis, reason));
+
+   // Every race has a winner and every winner is accepted (one check for all blocks, so the count stays fixed)
+   bool everyBlockAdded = true;
+   while(true) {
+      std::vector<Candidate> candidates = buildCandidates(pool, chain, rng, CANDIDATES_PER_BLOCK);
+      if(candidates.empty()) break;
+
+      const RaceResult race = parallel ? mineCandidatesParallel(candidates, 100000000)
+                                       : mineCandidates(candidates, FIRST_ROUND_BUDGET, 100000000);
+      everyBlockAdded = race.winner >= 0 && chain.addBlock(candidates[race.winner].block, reason);
+      if(!everyBlockAdded) break;
+      removeFromPool(pool, candidates[race.winner].block.getTransactions());
+   }
+   CHECK(everyBlockAdded);
+
+   // Blocks are linked, mined at the chain's difficulty, at most 100 transactions each, none included twice
+   const std::vector<Block>& blocks = chain.getChain();
+   std::unordered_set<std::string> includedIds;
+   std::size_t included = 0;
+   bool linked = true;
+   bool mined = true;
+   bool sizesOk = true;
+   bool includedOnce = true;
+   for(std::size_t i = 0; i < blocks.size(); ++i) {
+      const Block& block = blocks[i];
+      linked = linked && block.getHeader().prevHash == (i == 0 ? std::string(64, '0') : blocks[i - 1].hash());
+      mined = mined && block.hasValidPow() && block.getHeader().difficulty == chain.getDifficulty();
+      sizesOk = sizesOk && block.getTransactions().size() <= MAX_TRANSACTIONS_PER_BLOCK;
+      for(const Transaction& tx : block.getTransactions()) {
+         includedOnce = includedOnce && includedIds.insert(tx.getId()).second;
+         ++included;
+      }
+   }
+   CHECK(blocks.size() > 1);
+   CHECK(blocks[0].getTransactions().empty());
+   CHECK(linked);
+   CHECK(mined);
+   CHECK(sizesOk);
+   CHECK(includedOnce);
+
+   // Every transaction is included, rejected or still in the pool, and no funds appear or disappear
+   CHECK(included + rejected.size() + pool.size() == data.transactions.size());
+   CHECK(rejected.size() == 6);
+   CHECK(chain.getConfirmed().total() == initial.total());
+
+   // The loop stopped because what is left can't be applied: one side of each of the 2 double spends
+   CHECK(pool.size() == 2);
+   for(const Transaction& tx : pool) {
+      CHECK(!chain.getConfirmed().canApply(tx, reason) && reason == "unknown or spent output");
+   }
+
+   // A new chain from the same start accepts the same blocks and ends with the same balances
+   Blockchain replay(initial, keys);
+   bool replayed = true;
+   for(const Block& block : blocks) replayed = replayed && replay.addBlock(block, reason);
+   CHECK(replayed);
+   bool sameBalances = true;
+   for(const User& user : data.users) {
+      const std::string& key = user.getPublicKey();
+      sameBalances = sameBalances && replay.getConfirmed().balanceOf(key) == chain.getConfirmed().balanceOf(key);
+   }
+   CHECK(sameBalances);
+}
+
+void wholeCycle() { checkWholeCycle(false); }
+void wholeCycleParallel() { checkWholeCycle(true); }
+
+// 150 payments that don't depend on each other: the first block takes 100, the last one the other 50
+void fullAndLastBlock() {
+   const Transaction coins({}, std::vector<Output>(150, Output{A, 1}), 0);
+   Blockchain chain(State(coins), {A, B}, 3);
+   std::string reason;
+   Block genesis = chain.createBlock({});
+   mine(genesis);
+   chain.addBlock(genesis, reason);
+
+   std::vector<Transaction> pool;
+   for(unsigned int i = 0; i < 150; ++i) pool.push_back(Transaction({{coins.getId(), i}}, {{B, 1}}, i + 1));
+   Random rng(3);
+
+   std::vector<std::size_t> sizes;
+   while(true) {
+      std::vector<Candidate> candidates = buildCandidates(pool, chain, rng, 1);
+      if(candidates.empty()) break;
+      Block block = candidates[0].block;
+      mine(block);
+      if(!chain.addBlock(block, reason)) break;
+      removeFromPool(pool, block.getTransactions());
+      sizes.push_back(block.getTransactions().size());
+   }
+   CHECK(sizes == std::vector<std::size_t>({100, 50}));
+   CHECK(pool.empty());
+   CHECK(chain.getConfirmed().balanceOf(A) == 0);
+   CHECK(chain.getConfirmed().balanceOf(B) == 150);
+   CHECK(chain.getConfirmed().total() == 150);
+}
+
 int main() {
    const std::vector<std::pair<const char*, void (*)()>> tests = {
       {"merkle tree with 0, 1, 2, 3 and 5 transactions", merkleTree},
@@ -675,6 +789,9 @@ int main() {
       {"generator: transactions are valid in order", generatedTransactionsAreValid},
       {"generator: bad transactions of each kind", badTransactions},
       {"random numbers and shuffling", randomHelpers},
+      {"whole cycle: funds kept, every transaction accounted for", wholeCycle},
+      {"parallel: whole cycle", wholeCycleParallel},
+      {"full blocks of 100, smaller last block", fullAndLastBlock},
    };
 
    for(const auto& [name, test] : tests) {
