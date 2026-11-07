@@ -20,6 +20,7 @@ const std::string INITIAL_BALANCES_PATH = "initial_balances.csv";
 const std::string FINAL_BALANCES_PATH = "final_balances.csv";
 const std::string BENCHMARK_PATH = "benchmark.csv";
 constexpr int BENCHMARK_RUNS = 5;
+constexpr std::uint64_t FIXED_WORK_ATTEMPTS = 500000;
 
 struct Config {
    std::uint64_t seed = 123;
@@ -219,50 +220,78 @@ std::pair<double, double> meanAndSpread(const std::vector<double>& values) {
    return {mean, values.size() > 1 ? std::sqrt(squares / (values.size() - 1)) : 0.0};
 }
 
-// Runs the same config BENCHMARK_RUNS times sequentially, then in parallel, and writes every run plus the
-// mean and standard deviation to BENCHMARK_PATH. The normal block output is hidden during the runs
+// The same work in every run: CANDIDATES_PER_BLOCK fixed headers at difficulty 20 (a chance of 16^-20 per attempt,
+// so in practice never met), mined for exactly FIXED_WORK_ATTEMPTS nonces. Unlike a normal run, its time doesn't
+// depend on how lucky the nonces are
+RunStats fixedWork(bool parallel) {
+   std::vector<Candidate> candidates;
+   for(std::size_t i = 0; i < CANDIDATES_PER_BLOCK; ++i) {
+      candidates.push_back({Block(std::string(64, '0'), static_cast<std::int64_t>(1700000000 + i), 2, {}, 20)});
+   }
+
+   const RaceResult race = parallel ? mineCandidatesParallel(candidates, FIXED_WORK_ATTEMPTS)
+                                    : mineCandidates(candidates, FIRST_ROUND_BUDGET, FIXED_WORK_ATTEMPTS);
+   const int exitCode = race.winner < 0 && race.totalAttempts == FIXED_WORK_ATTEMPTS ? 0 : 1;
+   return {exitCode, 0, race.totalAttempts, race.timeSec, race.timeSec};
+}
+
+// Runs the same config BENCHMARK_RUNS times sequentially, then in parallel, then BENCHMARK_RUNS fixed-work runs in
+// both modes, and writes every run plus the mean and standard deviation to BENCHMARK_PATH. The normal block
+// output is hidden during the runs
 int benchmark(Config config) {
    std::ofstream file(BENCHMARK_PATH);
    if(!file) {
       throw std::runtime_error("Could not open " + BENCHMARK_PATH);
    }
-   file << std::fixed << std::setprecision(6) << "mode,run,blocks,attempts,mining_time_s,total_time_s\n";
+   file << std::fixed << std::setprecision(6) << "mode,run,blocks,attempts,mining_time_s,total_time_s,attempts_per_s\n";
+
+   struct Mode {
+      std::string name;
+      bool parallel;
+      bool fixed;
+   };
+   const Mode modes[4] = {{"sequential", false, false}, {"parallel", true, false},
+                          {"sequential_fixed", false, true}, {"parallel_fixed", true, true}};
 
    bool allOk = true;
-   double meanMining[2] = {0, 0};
+   double meanMining[4] = {0, 0, 0, 0};
 
-   for(bool parallel : {false, true}) {
-      config.parallel = parallel;
-      const std::string mode = parallel ? "parallel" : "sequential";
-      std::vector<double> columns[4];   // blocks, attempts, mining time, total time
+   for(int m = 0; m < 4; ++m) {
+      const Mode& mode = modes[m];
+      config.parallel = mode.parallel;
+      std::vector<double> columns[5];   // blocks, attempts, mining time, total time, attempts per second
 
       for(int i = 1; i <= BENCHMARK_RUNS; ++i) {
          std::cout.setstate(std::ios::badbit);   // while set, everything written to std::cout is dropped
-         const RunStats stats = run(config);
+         const RunStats stats = mode.fixed ? fixedWork(mode.parallel) : run(config);
          std::cout.clear();
 
          allOk = allOk && stats.exitCode == 0;
-         const double values[4] = {double(stats.blocks), double(stats.attempts), stats.miningSec, stats.totalSec};
-         file << mode << "," << i << "," << stats.blocks << "," << stats.attempts << ","
-              << stats.miningSec << "," << stats.totalSec << "\n";
-         for(int c = 0; c < 4; ++c) columns[c].push_back(values[c]);
+         const double rate = stats.attempts / stats.miningSec;
+         const double values[5] = {double(stats.blocks), double(stats.attempts), stats.miningSec, stats.totalSec, rate};
+         file << mode.name << "," << i << "," << stats.blocks << "," << stats.attempts << ","
+              << stats.miningSec << "," << stats.totalSec << "," << rate << "\n";
+         for(int c = 0; c < 5; ++c) columns[c].push_back(values[c]);
 
-         std::cout << std::fixed << std::setprecision(3) << mode << " run " << i << ": mining " << stats.miningSec
-                   << " s, total " << stats.totalSec << " s" << std::endl;
+         std::cout << std::fixed << std::setprecision(3) << mode.name << " run " << i << ": mining " << stats.miningSec
+                   << " s, total " << stats.totalSec << " s, " << rate / 1e6 << " M attempts/s" << std::endl;
       }
 
-      file << mode << ",mean";
+      file << mode.name << ",mean";
       for(const auto& column : columns) file << "," << meanAndSpread(column).first;
-      file << "\n" << mode << ",stddev";
+      file << "\n" << mode.name << ",stddev";
       for(const auto& column : columns) file << "," << meanAndSpread(column).second;
       file << "\n";
 
       const auto [mean, spread] = meanAndSpread(columns[2]);
-      meanMining[parallel] = mean;
-      std::cout << mode << " mining time: " << mean << " s on average, std dev " << spread << " s\n\n";
+      const auto [rateMean, rateSpread] = meanAndSpread(columns[4]);
+      meanMining[m] = mean;
+      std::cout << mode.name << " mining time: " << mean << " s on average, std dev " << spread << " s, "
+                << rateMean / 1e6 << " +- " << rateSpread / 1e6 << " M attempts/s\n\n";
    }
 
    std::cout << "parallel speedup (mining): " << std::setprecision(2) << meanMining[0] / meanMining[1] << "x\n"
+             << "parallel speedup (fixed work): " << meanMining[2] / meanMining[3] << "x\n"
              << "results: " << BENCHMARK_PATH << "\n";
    return allOk ? 0 : 1;
 }
