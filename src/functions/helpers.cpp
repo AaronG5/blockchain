@@ -170,13 +170,12 @@ void removeFromPool(std::vector<Transaction>& pool, const std::vector<Transactio
 
 std::vector<Transaction> selectTransactions(std::vector<Transaction>& pool, const State& confirmed, Random& rng) {
    std::vector<Transaction> selected;
-   std::string reason;
    State temp = confirmed;
    rng.shuffle(pool);
 
    for(const Transaction& tx : pool) {
       if(selected.size() == MAX_TRANSACTIONS_PER_BLOCK) break;
-      if(temp.apply(tx, reason)) selected.push_back(tx);
+      if(temp.tryApply(tx)) selected.push_back(tx);
    }
 
    return selected;
