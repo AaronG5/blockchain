@@ -54,24 +54,34 @@ public:
       if(txIds.empty()) return hash::hashFunction("");
       if(txIds.size() == 1) return txIds.front();
       std::vector<std::string> hashes;
+      hashes.reserve((txIds.size() + 1) / 2);
+      std::string node;   // left bytes || right bytes, the same buffer for every pair
       for(int i = 0; i < txIds.size(); i += 2) {
-         std::string node1 = hexToBytes(txIds[i]);
-         std::string node2 = hexToBytes((i + 1 < txIds.size()) ? txIds[i + 1] : txIds[i]);
-         hashes.push_back(hash::hashFunction(node1 + node2));
+         node.clear();
+         appendBytes(node, txIds[i]);
+         appendBytes(node, (i + 1 < txIds.size()) ? txIds[i + 1] : txIds[i]);
+         hashes.push_back(hash::hashFunction(node));
       }
 
       return computeTxRoot(hashes);
    }
 
    static std::string hexToBytes(const std::string& hexStr) {
-      if(hexStr.size() % 2 == 1) throw std::invalid_argument("hex input size can't be odd when decoding to bytes");
       std::string byteStr;
+      appendBytes(byteStr, hexStr);
+      return byteStr;
+   }
+
+   // Decodes hex to bytes at the end of `out`, which grows once instead of once per byte
+   static void appendBytes(std::string& out, const std::string& hexStr) {
+      if(hexStr.size() % 2 == 1) throw std::invalid_argument("hex input size can't be odd when decoding to bytes");
+      const std::size_t start = out.size();
+      out.resize(start + hexStr.size() / 2);
       for(int i = 0; i < hexStr.size(); i += 2) {
          char a = hexCharToByte(hexStr[i]);
          char b = hexCharToByte(hexStr[i+1]);
-         byteStr += a * 16 + b;
+         out[start + i / 2] = a * 16 + b;
       }
-      return byteStr;
    }
 
    static char hexCharToByte(char c) {
@@ -82,6 +92,7 @@ public:
 
    static std::string computeTxRoot(const std::vector<Transaction>& transactions) {
       std::vector<std::string> txIds;
+      txIds.reserve(transactions.size());
       for(const auto& tx : transactions) txIds.push_back(tx.getId());
       return computeTxRoot(txIds);
    }
