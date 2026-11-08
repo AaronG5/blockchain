@@ -175,6 +175,106 @@ Parallel mining is about 3.2× faster. The total time improves less, because gen
 (~0.8 s) runs on one thread. Block contents differ slightly between runs (timestamps change which candidate
 wins), so the number of blocks and attempts varies.
 
+## AI improvement
+
+### Main directions for improvement
+
+- Mining speed
+- Test coverage
+
+### Prompt
+
+AI model: Claude Opus 5.5 (Extra high effort)
+
+```CLAUDE CODE
+YOUR TASK.
+Improve the given primitive blockchain simulation project according to 2 main improvement directions:
+- Mining speed
+- Test coverage
+
+WORK FLOW.
+1. Read the task requirements given @"2 darbas - Supaprastintos bloku grandines kurimas - LT (2026).pdf". The current project is past the v0.2 mark, you are helping develop v0.3.
+2. Examine the codebase, find places where improvements can be made in terms of mining speed and test coverage.
+3. Suggest changes to the codebase based on your findings. For each direction (mining speed and test coverage) provide a list, ordered by improvement effectiveness, of improvement suggestions. Each suggestion should explain what part of the code would get improved, what would be the effect of the improvement and what makes the suggested change an improvement.
+4. On my approval, follow through with the suggested changes which I decide on. Each accepted change will be separated by a commit.
+5. After completing the changes:
+- For mining speed: rerun benchmarks with the default parameters and compare them to @benchmark-v0.2.csv. Explain what metrics changed and why, how did the improvements affect them.
+- For test coverage: rerun tests with the same parameters as before, say what changed, how did the tests improve coverage.
+
+NOTES.
+- Don't suggest improvements for @hash.hpp.
+```
+
+### Suggested improvements
+
+#### <u>Mining speed</u>
+
+**M1. Cheaper candidate building (selectTransactions, State::canApply/apply, Block::computeTxRoot)** `ACCEPTED`
+
+- **Effect:** 0.460 → 0.334 s per run in both modes, about 10–13% off total_time_s. mining_time_s doesn't change, since it only times the PoW race. Two parts, each its own commit:
+   - a. Allocation-free validity check.
+   - b. Merkle byte buffer.
+
+**M2. Allocation-free PoW loop with a cached header prefix (Block::Header, mineWithBudget, mine)** `ACCEPTED`
+
+- **Effect:** sequential 1.055 → 1.288 M attempts/s (+22%). Parallel on 5 threads 3.75 → 4.70 M/s (+25%). That's roughly −18% and −20% mining_time_s.
+
+**M3. Use all 8 cores in parallel mode (mineCandidatesParallel)** `REJECTED`
+
+- **Reason for rejection:** parallel mining mode's purpose is to simulate competition between miners, letting candidates use more than one core each wouldn't prove anything. An improvement to mining speed from this change wouldn't change the underlying speed of the proccess itself.
+
+**M4. Reuse worker threads across blocks.** `REJECTED`
+
+- **Effect:** saves the measured cost of creating threads, 5.0 ± 1.3 ms per run (about 3% of parallel mining time).
+- **Reason for rejection:** the gains in mining speed don't outweigh the gains in complexity of adding a thread pool to the proccess.
+
+#### <u>Test coverage</u>
+
+**T0. make coverage target** `ACCEPTED`
+
+- Builds the tests with clang source coverage and prints per-file line, branch and function coverage. This turns coverage into a number that can be compared between v0.2 and v0.3, instead of a count of tests.
+
+**T1. Generator and reproducibility (generator.hpp, user.hpp)** `ACCEPTED`
+
+- **Tests:** the same seed gives identical users, keys, funding and transaction IDs, generated transactions are valid in order, and each kind of bad transaction is rejected for the right reason.
+- **Effect:** about +140 covered lines (roughly 69% → 93% of lines), covering the reproducibility checks the assignment asks for.
+
+**T2. End-to-end cycle, sequential and parallel** `ACCEPTED`
+
+- **Tests:** a small generated set goes through pool, candidates, race, addBlock and removeFromPool until done, checking that funds are preserved, the counts add up, no ID repeats, blocks link correctly, PoW is valid and a fresh chain re-accepts every block.
+- **Effect:** covers removeFromPool, the empty-pool exit and the 100-transaction cap, and replaces the by-eye "funds match" and "counts add up" checks with asserts.
+
+**T3. Validation reject paths (state.hpp, blockchain.hpp, findPermanentProblem)** `ACCEPTED`
+
+- **Tests:** these cases are rejected with the right reason:
+   - missing inputs or outputs
+   - an input used twice
+   - inputs with different owners
+   - a transaction that pays only its sender
+   - mismatched totals
+   - a wrong block version
+   - 101 transactions in a block
+   - a tampered ID or zero amount inside a mined block
+- **Effect:** about +13 branches (roughly +6 points of branch coverage) across the section 4 validation rules.
+
+**T4. Race limits and budgets (mineCandidates, mineCandidatesParallel, mine)** `ACCEPTED`
+
+- **Tests:** the attempt limit stops the race with no winner, budgets double each round and resume at the first untried nonce, sequential mining finds the smallest valid nonce, and parallel losers stop after a win.
+- **Effect:** covers the limit and empty-list branches that have zero hits today, and protects the mining-speed changes (M2, M3).
+
+**T5. Formats and determinism (block.hpp, transaction.hpp)** `ACCEPTED`
+
+- **Tests:** Transaction::serialize and Header::serialize produce the exact formats in the README, a fixed header always hashes the same, and hexToBytes rejects bad input.
+- **Effect:** covers block.hpp's error branches and checks M2's cached prefix byte for byte.
+
+#### <u>Other</u>
+
+**B. Benchmark that doesn't depend on luck (main.cpp benchmark; prerequisite, not a speedup)** `ACCEPTED`
+
+- **Change:** add an attempts/s column to the CSV, plus a fixed-work run that hashes N nonces on fixed headers at a difficulty nobody can reach.
+- **Effect:** the v0.2 → v0.3 comparison measures speed per attempt, not lucky nonces. The attempt counts in v0.2 vary by 8–13%. The same measurement can be built from the blockchain-v0.2 tag for a direct v0.2 number.
+- **Why:** the assignment recommends exactly this ("fiksuoto bandymų kiekio sparta palyginama patikimiau").
+
 ### v0.2 and v0.3 comparison
 
 #### <u>Mining speed</u>
