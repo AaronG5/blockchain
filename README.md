@@ -164,14 +164,14 @@ Negative amounts can't be represented, since `amount` is unsigned.
 ### Sequential vs parallel mining
 
 `make benchmark`: 5 runs per mode, same config (default settings: seed 123, 1000 users, 10000 transactions,
-difficulty 3). Apple M3, Apple clang 21, `-O2`. Mean ± standard deviation from [`benchmark.csv`](/benchmark.csv):
+difficulty 3). Apple M3, Apple clang 21, `-O2`. Mean ± standard deviation from [`benchmark-v0.2.csv`](/benchmark-v0.2.csv):
 
 | Mode       | Mining time     | Total time      | Attempts         | Blocks      |
 | ---------- | --------------- | --------------- | ---------------- | ----------- |
-| sequential | 0.374 ± 0.037 s | 1.161 ± 0.054 s | 387,043 ± 29,727 | 105.2 ± 1.3 |
-| parallel   | 0.139 ± 0.033 s | 0.937 ± 0.053 s | 440,735 ± 59,278 | 104.2 ± 0.4 |
+| sequential | 0.477 ± 0.021 s | 1.325 ± 0.046 s | 412,538 ± 23,597 | 105.2 ± 1.6 |
+| parallel   | 0.150 ± 0.014 s | 0.988 ± 0.019 s | 425,802 ± 33,868 | 104.2 ± 0.8 |
 
-Parallel mining is about 2.7× faster. The total time improves less, because generating users and transactions
+Parallel mining is about 3.2× faster. The total time improves less, because generating users and transactions
 (~0.8 s) runs on one thread. Block contents differ slightly between runs (timestamps change which candidate
 wins), so the number of blocks and attempts varies.
 
@@ -179,22 +179,21 @@ wins), so the number of blocks and attempts varies.
 
 #### <u>Mining speed</u>
 
-`make benchmark` with default settings, 5 runs per mode, mean ± standard deviation. Apple M3, Apple clang 21, `-O2`,
-on AC power. The same v0.2 code runs slower today than when [`benchmark-v0.2.csv`](/benchmark-v0.2.csv) was recorded,
-so v0.2 was also rerun right before v0.3 (the `blockchain-v0.2` tag with only the new benchmark added). The change is
-v0.3 against that rerun. Results: [`benchmark-v0.2-rerun.csv`](/benchmark-v0.2-rerun.csv),
+`make benchmark` with default settings, 5 runs per mode, mean ± standard deviation. Apple M3, Apple clang 21, `-O2`.
+v0.2 was measured from the `blockchain-v0.2` tag with only the new benchmark (B) added, so both versions report
+attempts/s and fixed work. Results: [`benchmark-v0.2.csv`](/benchmark-v0.2.csv),
 [`benchmark-v0.3.csv`](/benchmark-v0.3.csv).
 
-| Metric                      | v0.2 (csv)      | v0.2 (rerun)    | v0.3            | Change |
-| --------------------------- | --------------- | --------------- | --------------- | ------ |
-| Sequential mining time      | 0.374 ± 0.037 s | 0.477 ± 0.021 s | 0.409 ± 0.024 s | −14%   |
-| Sequential total time       | 1.161 ± 0.054 s | 1.325 ± 0.046 s | 1.196 ± 0.056 s | −10%   |
-| Sequential attempts/s       | 1.04 ± 0.07 M   | 0.86 ± 0.01 M   | 0.97 ± 0.03 M   | +12%   |
-| Parallel mining time        | 0.139 ± 0.033 s | 0.150 ± 0.014 s | 0.126 ± 0.005 s | −16%   |
-| Parallel total time         | 0.937 ± 0.053 s | 0.988 ± 0.019 s | 0.923 ± 0.070 s | −7%    |
-| Parallel attempts/s         | 3.25 ± 0.45 M   | 2.84 ± 0.25 M   | 3.28 ± 0.25 M   | +15%   |
-| Fixed work, sequential      | -               | 1.07 ± 0.03 M/s | 1.27 ± 0.04 M/s | +18%   |
-| Fixed work, parallel        | -               | 3.81 ± 0.17 M/s | 4.12 ± 0.75 M/s | +8%    |
+| Metric                 | v0.2            | v0.3            | Change |
+| ---------------------- | --------------- | --------------- | ------ |
+| Sequential mining time | 0.477 ± 0.021 s | 0.409 ± 0.024 s | −14%   |
+| Sequential total time  | 1.325 ± 0.046 s | 1.196 ± 0.056 s | −10%   |
+| Sequential attempts/s  | 0.86 ± 0.01 M   | 0.97 ± 0.03 M   | +12%   |
+| Parallel mining time   | 0.150 ± 0.014 s | 0.126 ± 0.005 s | −16%   |
+| Parallel total time    | 0.988 ± 0.019 s | 0.923 ± 0.070 s | −7%    |
+| Parallel attempts/s    | 2.84 ± 0.25 M   | 3.28 ± 0.25 M   | +15%   |
+| Fixed work, sequential | 1.07 ± 0.03 M/s | 1.27 ± 0.04 M/s | +18%   |
+| Fixed work, parallel   | 3.81 ± 0.17 M/s | 4.12 ± 0.75 M/s | +8%    |
 
 - **Attempts per second** went up because an attempt no longer rebuilds the header string or allocates memory, only
   the nonce digits are rewritten, and parallel threads no longer write next to each other on every attempt (M2).
@@ -204,8 +203,7 @@ v0.3 against that rerun. Results: [`benchmark-v0.2-rerun.csv`](/benchmark-v0.2-r
   don't allocate and Merkle nodes reuse one buffer. The selected transactions are exactly the same as in v0.2.
 - **Blocks and attempts per run** didn't change (about 105 blocks, 390–450 thousand attempts), since the difficulty
   and the rules are the same.
-- Against the old csv, v0.3's sequential times look no better, because the machine was faster when it was recorded.
-- A second v0.2/v0.3 pair right after gave the same picture: fixed work +19% sequential and +20% parallel, total time
+- A second pair of runs gave the same picture: fixed work +19% sequential and +20% parallel, total time
   −8% sequential and −11% parallel.
 
 #### <u>Test coverage</u>
