@@ -1,3 +1,0 @@
-Full set collisions, length 1000, 200000 inputs, 200000 distinct
-
-   No collisions found.
